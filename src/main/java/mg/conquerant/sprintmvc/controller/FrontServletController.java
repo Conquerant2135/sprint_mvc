@@ -5,9 +5,11 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.ServletException;
 import java.util.List;
+import java.util.ArrayList;
 import java.io.IOException;
 import java.io.PrintWriter;
 import mg.conquerant.sprintmvc.utils.ClasspathAnalyzer;
+import mg.conquerant.sprintmvc.annotation.Controller;
 
 public class FrontServletController extends HttpServlet {
 
@@ -29,6 +31,13 @@ public class FrontServletController extends HttpServlet {
     public void init(){
         ClasspathAnalyzer clp = new ClasspathAnalyzer();
         classList = clp.classList();
+        List<Class<?>> withAnnotation = new ArrayList<>();
+        for(Class<?> cls : classList){
+            if ( cls.isAnnotationPresent(Controller.class)){
+                withAnnotation.add(cls);
+            }
+        }
+        classList = withAnnotation;
     }
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws IOException {
