@@ -50,7 +50,6 @@ public class ClasspathAnalyzer {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.println("Base name : " + baseName);
         return baseName;
     }
 
