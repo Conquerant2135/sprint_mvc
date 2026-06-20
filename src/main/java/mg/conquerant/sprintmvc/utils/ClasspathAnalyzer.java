@@ -10,6 +10,7 @@ import java.util.List;
  * This class is made for scanning the fullclasspath of the application
  */
 public class ClasspathAnalyzer {
+
     private List<Class<?>> classList;
 
     /**

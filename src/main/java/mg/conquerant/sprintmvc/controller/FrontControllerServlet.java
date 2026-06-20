@@ -29,15 +29,22 @@ public class FrontControllerServlet extends HttpServlet {
     }
 
     @Override
-    public void init(){
-        ClasspathAnalyzer clp = new ClasspathAnalyzer();
-        classList = clp.classList("");
+    public void init() throws ServletException {
+        String blockPackage = getServletConfig().getInitParameter("package_list");
+        String separator = getServletConfig().getInitParameter("list_separator");
+        String[] packageList = blockPackage.split(separator);
         List<Class<?>> withAnnotation = new ArrayList<>();
-        for(Class<?> cls : classList){
-            if ( cls.isAnnotationPresent(Controller.class)){
-                withAnnotation.add(cls);
+        ClasspathAnalyzer clp = new ClasspathAnalyzer();
+
+        for (String pkg : packageList) {
+            classList = clp.classList(pkg);
+            for (Class<?> cls : classList) {
+                if (cls.isAnnotationPresent(Controller.class)) {
+                    withAnnotation.add(cls);
+                }
             }
         }
+
         classList = withAnnotation;
     }
 
@@ -50,7 +57,7 @@ public class FrontControllerServlet extends HttpServlet {
 
         out.println("<h1> Class list : </h1>");
         out.println("<ul>");
-        for(Class<?> cls : classList ){
+        for (Class<?> cls : classList) {
             out.println("<li>" + cls.getName() + "</li>");
         }
         out.println("</ul>");
