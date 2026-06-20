@@ -3,7 +3,9 @@ package mg.conquerant.sprintmvc.controller;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
@@ -33,7 +35,7 @@ public class FrontControllerServlet extends HttpServlet {
         String blockPackage = getServletConfig().getInitParameter("package_list");
         String separator = getServletConfig().getInitParameter("list_separator");
         String[] packageList = blockPackage.split(separator);
-        List<Class<?>> withAnnotation = new ArrayList<>();
+        Set<Class<?>> withAnnotation = new HashSet<>();
         ClasspathAnalyzer clp = new ClasspathAnalyzer();
 
         for (String pkg : packageList) {
@@ -45,7 +47,7 @@ public class FrontControllerServlet extends HttpServlet {
             }
         }
 
-        classList = withAnnotation;
+        classList = new ArrayList<>(withAnnotation);
     }
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws IOException {
