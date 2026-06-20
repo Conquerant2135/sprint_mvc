@@ -12,7 +12,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import mg.conquerant.sprintmvc.annotation.Controller;
 import mg.conquerant.sprintmvc.utils.ClasspathAnalyzer;
 
-public class FrontServletController extends HttpServlet {
+public class FrontControllerServlet extends HttpServlet {
 
     private List<Class<?>> classList;
 

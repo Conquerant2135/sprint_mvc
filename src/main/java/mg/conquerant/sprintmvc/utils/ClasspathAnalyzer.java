@@ -25,7 +25,7 @@ public class ClasspathAnalyzer {
             URI resource = resourceURL.toURI();
             File rootDirectory = new File(resource);
             String rootDirectoryPath;
-            if ( targetPackage.trim().isEmpty() ){
+            if (targetPackage.trim().isEmpty()) {
                 rootDirectoryPath = rootDirectory.getPath() + File.separator;
             } else {
                 rootDirectoryPath = getRootPath();
@@ -37,7 +37,7 @@ public class ClasspathAnalyzer {
         return classList;
     }
 
-    private static String getRootPath(){
+    private static String getRootPath() {
         String baseName = "";
         ClassLoader cl = ClasspathAnalyzer.class.getClassLoader();
         URL baseUrl = cl.getResource("");
@@ -75,9 +75,8 @@ public class ClasspathAnalyzer {
                         .replace(File.separator, ".")
                         .replace(".class", "");
                 try {
-                    System.out.println(temp);
-                    System.out.println(rootDirectoryPath);
-                    classList.add(Class.forName(className));
+                    ClassLoader cl = Thread.currentThread().getContextClassLoader();
+                    classList.add(Class.forName(className, true, cl));
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
