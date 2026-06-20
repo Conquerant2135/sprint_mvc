@@ -2,55 +2,85 @@ package mg.conquerant.sprintmvc.utils;
 
 import java.io.File;
 import java.net.URI;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.net.URL;
 
 /**
- * This class is made for scanning the fullclasspath of the application 
+ * This class is made for scanning the fullclasspath of the application
  */
 public class ClasspathAnalyzer {
-    private List<Class<?>> classList; 
+    private List<Class<?>> classList;
 
     /**
      * The method scan the classpath of the actual working application
-     */ 
-    public List<Class<?>> classList(){
+     * Get all the classes present
+     */
+    public List<Class<?>> classList(String targetPackage) {
         classList = new ArrayList<>();
+        String targetPackagePath = targetPackage.replace(".", File.separator);
         ClassLoader classLoader = ClasspathAnalyzer.class.getClassLoader();
-        URL resourceURL = classLoader.getResource("");
+        URL resourceURL = classLoader.getResource(targetPackagePath);
         try {
             URI resource = resourceURL.toURI();
             File rootDirectory = new File(resource);
-            String rootDirectoryPath = rootDirectory.getPath() + File.separator;
-            findClass(rootDirectory.listFiles() , rootDirectoryPath);
+            String rootDirectoryPath;
+            if ( targetPackage.trim().isEmpty() ){
+                rootDirectoryPath = rootDirectory.getPath() + File.separator;
+            } else {
+                rootDirectoryPath = getRootPath();
+            }
+            findClass(rootDirectory.listFiles(), rootDirectoryPath);
         } catch (Exception e) {
             e.printStackTrace();
         }
         return classList;
     }
 
+    private static String getRootPath(){
+        String baseName = "";
+        ClassLoader cl = ClasspathAnalyzer.class.getClassLoader();
+        URL baseUrl = cl.getResource("");
+        try {
+            URI basePath = baseUrl.toURI();
+            baseName = basePath.getPath();
+            baseName = baseName.replace("/", File.separator);
+            baseName = baseName.substring(1);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        System.out.println("Base name : " + baseName);
+        return baseName;
+    }
+
     /**
-     * Do a recursive search of all .class file for getting all class of the application
-     * @toAnalyze  The list of element of the parent element to scan
-     * @rootDirectoryPath  the root directory of the project for removing it from 
-     *  the class url
-     */ 
-    public void findClass(File[] toAnalyze , String rootDirectoryPath){
-        if ( toAnalyze == null ) return;
-        for(File file : toAnalyze){
-            if ( !file.isDirectory() ){
+     * Do a recursive search of all .class file for getting all class of the
+     * package to scan
+     * 
+     * @param toAnalyze         The list of element of the parent element to scan
+     * @param rootDirectoryPath The root directory of the project for removing it
+     *                          from the class url
+     */
+    public void findClass(File[] toAnalyze, String rootDirectoryPath) {
+        if (toAnalyze == null)
+            return;
+        for (File file : toAnalyze) {
+            if (file.isDirectory()) {
+
+                findClass(file.listFiles(), rootDirectoryPath);
+
+            } else if (file.getName().endsWith(".class")) {
                 String temp = file.getPath();
-                String className = temp.replace(rootDirectoryPath , "")
-                                    .replace(File.separator , ".")
-                                    .replace(".class" , "");
+                String className = temp.replace(rootDirectoryPath, "")
+                        .replace(File.separator, ".")
+                        .replace(".class", "");
                 try {
+                    System.out.println(temp);
+                    System.out.println(rootDirectoryPath);
                     classList.add(Class.forName(className));
-                } catch (Exception e){
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
-            } else {
-                findClass(file.listFiles() , rootDirectoryPath);
             }
         }
     }

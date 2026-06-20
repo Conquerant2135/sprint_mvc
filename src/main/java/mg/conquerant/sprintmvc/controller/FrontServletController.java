@@ -1,15 +1,16 @@
 package mg.conquerant.sprintmvc.controller;
 
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.ServletException;
-import java.util.List;
-import java.util.ArrayList;
 import java.io.IOException;
 import java.io.PrintWriter;
-import mg.conquerant.sprintmvc.utils.ClasspathAnalyzer;
+import java.util.ArrayList;
+import java.util.List;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import mg.conquerant.sprintmvc.annotation.Controller;
+import mg.conquerant.sprintmvc.utils.ClasspathAnalyzer;
 
 public class FrontServletController extends HttpServlet {
 
@@ -30,7 +31,7 @@ public class FrontServletController extends HttpServlet {
     @Override
     public void init(){
         ClasspathAnalyzer clp = new ClasspathAnalyzer();
-        classList = clp.classList();
+        classList = clp.classList("");
         List<Class<?>> withAnnotation = new ArrayList<>();
         for(Class<?> cls : classList){
             if ( cls.isAnnotationPresent(Controller.class)){
