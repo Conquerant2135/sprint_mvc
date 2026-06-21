@@ -1,4 +1,4 @@
-package mg.conquerant.sprintmvc.controller;
+package mg.conquerant.sprintmvc.core.web;
 
 import java.io.IOException;
 import java.io.PrintWriter;

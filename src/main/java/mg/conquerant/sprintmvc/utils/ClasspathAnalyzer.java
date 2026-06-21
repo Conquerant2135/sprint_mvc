@@ -47,8 +47,8 @@ public class ClasspathAnalyzer {
             baseName = basePath.getPath();
             baseName = baseName.replace("/", File.separator);
             String osName = System.getProperty("os.name");
-             
-            if (osName.toLowerCase().contains("win")){
+
+            if (osName.toLowerCase().contains("win")) {
                 baseName = baseName.substring(1);
             }
 
