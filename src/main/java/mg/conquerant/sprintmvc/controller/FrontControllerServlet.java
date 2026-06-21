@@ -14,11 +14,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import mg.conquerant.sprintmvc.annotation.Controller;
 import mg.conquerant.sprintmvc.utils.ClasspathAnalyzer;
 
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-
 public class FrontControllerServlet extends HttpServlet {
 
     private List<Class<?>> classList;
@@ -58,7 +53,7 @@ public class FrontControllerServlet extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws IOException {
         PrintWriter out = response.getWriter();
         response.setContentType("text/html");
-        out.println("<p> The method : " + method + "</p>");
+        out.println("<p> The method : " + request.getMethod() + "</p>");
         out.println("<p> The called url : " + request.getRequestURL() + "</p>");
 
         out.println("<h1> Class list : </h1>");
