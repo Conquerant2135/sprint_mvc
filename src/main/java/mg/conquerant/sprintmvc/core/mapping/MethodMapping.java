@@ -47,6 +47,8 @@ public class MethodMapping {
             toShow += "[name: " + p.getName() + ", type: " + p.getType().getSimpleName() + "]";
         }
 
+        toShow += " - Return type : " + getActionMethod().getReturnType().getName();
+
         return toShow;
     }
 
