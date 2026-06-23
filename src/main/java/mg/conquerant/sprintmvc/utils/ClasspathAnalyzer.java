@@ -46,7 +46,12 @@ public class ClasspathAnalyzer {
             URI basePath = baseUrl.toURI();
             baseName = basePath.getPath();
             baseName = baseName.replace("/", File.separator);
-            baseName = baseName.substring(1);
+            String osName = System.getProperty("os.name");
+
+            if (osName.toLowerCase().contains("win")) {
+                baseName = baseName.substring(1);
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
