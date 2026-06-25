@@ -14,13 +14,14 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import mg.conquerant.sprintmvc.annotation.Controller;
 import mg.conquerant.sprintmvc.core.mapping.MethodMapping;
+import mg.conquerant.sprintmvc.core.mapping.UrlInfo;
 import mg.conquerant.sprintmvc.core.scan.MappingBuilder;
 import mg.conquerant.sprintmvc.utils.ClasspathAnalyzer;
 
 public class FrontControllerServlet extends HttpServlet {
 
     private List<Class<?>> classList;
-    private Map<String, MethodMapping> routesMapping;
+    private Map<UrlInfo, MethodMapping> routesMapping;
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -71,8 +72,11 @@ public class FrontControllerServlet extends HttpServlet {
         String contextPath = request.getContextPath();
         String targetResource = request.getRequestURI().substring(contextPath.length());
 
+        UrlInfo urlInfo = new UrlInfo(targetResource, null);
+        urlInfo.setMethod(request.getMethod());
+
         out.print("<h2>");
-        if (routesMapping.containsKey(targetResource)) {
+        if (routesMapping.containsKey(urlInfo)) {
             out.print(" We have this resource but we also have : ");
         } else {
             out.print("We dont have the requested ressource but instead we have :");

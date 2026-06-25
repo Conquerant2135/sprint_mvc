@@ -51,7 +51,7 @@
                     <mainClass>mg.conquerant.sprintmvc.main.Main</mainClass>
                 </configuration>
             </plugin>
-            
+
         </plugins>
     </build>
 
