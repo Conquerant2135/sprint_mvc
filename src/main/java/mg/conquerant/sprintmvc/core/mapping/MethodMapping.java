@@ -2,6 +2,7 @@ package mg.conquerant.sprintmvc.core.mapping;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+
 import mg.conquerant.sprintmvc.annotation.HTTPMethod;
 
 public class MethodMapping {
@@ -53,7 +54,6 @@ public class MethodMapping {
         toShow += " - Method name : " + getActionMethod().getName();
         toShow += " - Parameters : ";
 
-
         Parameter[] params = getActionMethod().getParameters();
 
         for (Parameter p : params) {
@@ -63,8 +63,6 @@ public class MethodMapping {
         if ( getUrlMethod() == HTTPMethod.POST ){
             toShow += " - Method : POST ";
         } else toShow += " - Method : GET ";
-
-
 
         return toShow;
     }
