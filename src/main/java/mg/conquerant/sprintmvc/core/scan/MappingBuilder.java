@@ -4,10 +4,11 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import mg.conquerant.sprintmvc.core.mapping.UrlInfo;
+
 import mg.conquerant.sprintmvc.annotation.HTTPMethod;
 import mg.conquerant.sprintmvc.annotation.UrlMapping;
 import mg.conquerant.sprintmvc.core.mapping.MethodMapping;
+import mg.conquerant.sprintmvc.core.mapping.UrlInfo;
 
 public class MappingBuilder {
 
@@ -19,7 +20,9 @@ public class MappingBuilder {
         for (Class<?> controller : controllerList) {
             Method[] methods = controller.getDeclaredMethods();
             for (Method toAnalyze : methods) {
+                System.out.println("Method name : " + toAnalyze.getName());
                 if (toAnalyze.isAnnotationPresent(UrlMapping.class)) {
+                    System.out.println("La methode est correcte :  " + toAnalyze.getName());
                     UrlMapping urlMapping = toAnalyze.getAnnotation(UrlMapping.class);
                     String path = urlMapping.path();
                     HTTPMethod urlMethod = urlMapping.method();
@@ -27,6 +30,7 @@ public class MappingBuilder {
                 }
             }
         }
+        
         return methodMap;
     }
 

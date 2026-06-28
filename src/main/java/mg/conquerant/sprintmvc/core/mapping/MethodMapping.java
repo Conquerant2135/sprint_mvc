@@ -65,6 +65,8 @@ public class MethodMapping {
             toShow += " - Method : POST ";
         } else toShow += " - Method : GET ";
 
+        toShow += " - return type : " + getActionMethod().getReturnType().getName();
+
         return toShow;
     }
 
