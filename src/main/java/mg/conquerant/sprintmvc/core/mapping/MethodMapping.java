@@ -11,6 +11,7 @@ public class MethodMapping {
     private Method actionMethod;
     private String path;
     private HTTPMethod urlMethod;
+    private UrlInfo urlInfo;
 
     public HTTPMethod getUrlMethod(){
         return urlMethod;
@@ -67,4 +68,19 @@ public class MethodMapping {
         return toShow;
     }
 
+    public UrlInfo getUrlInfo() {
+        return urlInfo;
+    }
+
+    public void setUrlInfo(UrlInfo urlInfo) {
+        this.urlInfo = urlInfo;
+    }
+
+    public void execute(){
+        try {
+            actionMethod.invoke(controllerClass.getConstructor());        
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }

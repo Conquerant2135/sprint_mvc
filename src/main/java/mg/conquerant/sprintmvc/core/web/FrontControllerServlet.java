@@ -80,7 +80,10 @@ public class FrontControllerServlet extends HttpServlet {
             out.print(" We have this resource but we also have : ");
         } else {
             out.print("We dont have the requested ressource but instead we have :");
+            MethodMapping mm = routesMapping.get(urlInfo); 
+            mm.execute();
         }
+
         out.println("</h2>");
         out.println("<ul>");
         for (MethodMapping methodMapping : routesMapping.values()) {
