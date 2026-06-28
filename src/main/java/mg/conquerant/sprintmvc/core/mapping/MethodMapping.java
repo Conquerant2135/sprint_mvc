@@ -77,12 +77,4 @@ public class MethodMapping {
     public void setUrlInfo(UrlInfo urlInfo) {
         this.urlInfo = urlInfo;
     }
-
-    public void execute(){
-        try {
-            actionMethod.invoke(controllerClass.getConstructor());        
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 }

@@ -74,14 +74,12 @@ public class FrontControllerServlet extends HttpServlet {
 
         UrlInfo urlInfo = new UrlInfo(targetResource, null);
         urlInfo.setMethod(request.getMethod());
-
+        out.print(urlInfo);
         out.print("<h2>");
         if (routesMapping.containsKey(urlInfo)) {
             out.print(" We have this resource but we also have : ");
         } else {
             out.print("We dont have the requested ressource but instead we have :");
-            // MethodMapping mm = routesMapping.get(urlInfo);
-            // mm.execute();
         }
 
         out.println("</h2>");
