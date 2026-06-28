@@ -3,12 +3,20 @@ package mg.conquerant.sprintmvc.core.mapping;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 
+import mg.conquerant.sprintmvc.annotation.HTTPMethod;
+
 public class MethodMapping {
 
     private Class<?> controllerClass;
     private Method actionMethod;
     private String path;
+    private HTTPMethod urlMethod;
+    private UrlInfo urlInfo;
 
+    public HTTPMethod getUrlMethod(){
+        return urlMethod;
+    }
+    
     public Class<?> getControllerClass() {
         return controllerClass;
     }
@@ -19,6 +27,10 @@ public class MethodMapping {
 
     public Method getActionMethod() {
         return actionMethod;
+    }
+
+    public void setUrlMethod(HTTPMethod urlMethod){
+        this.urlMethod = urlMethod;
     }
 
     public void setActionMethod(Method actionMethod) {
@@ -37,7 +49,9 @@ public class MethodMapping {
     public String toString() {
         String toShow = "";
 
-        toShow += "Url : " + getPath();
+        toShow += "Class : " + getControllerClass().getName() + " "; 
+
+        toShow += " - Url : " + getPath();
         toShow += " - Method name : " + getActionMethod().getName();
         toShow += " - Parameters : ";
 
@@ -47,9 +61,20 @@ public class MethodMapping {
             toShow += "[name: " + p.getName() + ", type: " + p.getType().getSimpleName() + "]";
         }
 
-        toShow += " - Return type : " + getActionMethod().getReturnType().getName();
+        if ( getUrlMethod() == HTTPMethod.POST ){
+            toShow += " - Method : POST ";
+        } else toShow += " - Method : GET ";
+
+        toShow += " - return type : " + getActionMethod().getReturnType().getName();
 
         return toShow;
     }
 
+    public UrlInfo getUrlInfo() {
+        return urlInfo;
+    }
+
+    public void setUrlInfo(UrlInfo urlInfo) {
+        this.urlInfo = urlInfo;
+    }
 }
