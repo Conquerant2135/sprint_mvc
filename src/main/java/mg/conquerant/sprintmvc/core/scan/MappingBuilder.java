@@ -20,9 +20,7 @@ public class MappingBuilder {
         for (Class<?> controller : controllerList) {
             Method[] methods = controller.getDeclaredMethods();
             for (Method toAnalyze : methods) {
-                System.out.println("Method name : " + toAnalyze.getName());
                 if (toAnalyze.isAnnotationPresent(UrlMapping.class)) {
-                    System.out.println("La methode est correcte :  " + toAnalyze.getName());
                     UrlMapping urlMapping = toAnalyze.getAnnotation(UrlMapping.class);
                     String path = urlMapping.path();
                     HTTPMethod urlMethod = urlMapping.method();
