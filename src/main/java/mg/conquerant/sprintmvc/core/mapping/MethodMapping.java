@@ -3,7 +3,7 @@ package mg.conquerant.sprintmvc.core.mapping;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 
-import mg.conquerant.sprintmvc.annotation.HTTPMethod;
+import mg.conquerant.sprintmvc.core.annotation.HTTPMethod;
 
 public class MethodMapping {
 
