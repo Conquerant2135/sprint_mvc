@@ -2,7 +2,7 @@ package mg.conquerant.sprintmvc.core.mapping;
 
 import java.util.Objects;
 
-import mg.conquerant.sprintmvc.annotation.HTTPMethod;
+import mg.conquerant.sprintmvc.core.annotation.HTTPMethod;
 
 public class UrlInfo {
     private String path;

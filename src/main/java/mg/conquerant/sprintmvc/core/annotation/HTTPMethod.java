@@ -1,4 +1,4 @@
-package mg.conquerant.sprintmvc.annotation;
+package mg.conquerant.sprintmvc.core.annotation;
 
 public enum HTTPMethod {
     POST,
