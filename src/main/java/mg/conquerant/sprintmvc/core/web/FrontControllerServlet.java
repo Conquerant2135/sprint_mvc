@@ -2,21 +2,15 @@ package mg.conquerant.sprintmvc.core.web;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import mg.conquerant.sprintmvc.core.annotation.Controller;
 import mg.conquerant.sprintmvc.core.mapping.MethodMapping;
 import mg.conquerant.sprintmvc.core.mapping.UrlInfo;
-import mg.conquerant.sprintmvc.core.scan.MappingBuilder;
-import mg.conquerant.sprintmvc.utils.ClasspathAnalyzer;
 
 public class FrontControllerServlet extends HttpServlet {
 
@@ -37,23 +31,8 @@ public class FrontControllerServlet extends HttpServlet {
 
     @Override
     public void init() throws ServletException {
-        String blockPackage = getServletConfig().getInitParameter("package_list");
-        String separator = getServletConfig().getInitParameter("list_separator");
-        String[] packageList = blockPackage.split(separator);
-        Set<Class<?>> withAnnotation = new HashSet<>();
-        ClasspathAnalyzer clp = new ClasspathAnalyzer();
-
-        for (String pkg : packageList) {
-            classList = clp.classList(pkg);
-            for (Class<?> cls : classList) {
-                if (cls.isAnnotationPresent(Controller.class)) {
-                    withAnnotation.add(cls);
-                }
-            }
-        }
-
-        classList = new ArrayList<>(withAnnotation);
-        routesMapping = MappingBuilder.scanAndBuildMapping(classList);
+        classList = (List<Class<?>>) getServletContext().getAttribute("controllerList");
+        routesMapping =  (Map<UrlInfo, MethodMapping>) getServletContext().getAttribute("routesMapping");
     }
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws IOException {
