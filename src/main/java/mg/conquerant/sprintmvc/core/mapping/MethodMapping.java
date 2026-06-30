@@ -77,4 +77,14 @@ public class MethodMapping {
     public void setUrlInfo(UrlInfo urlInfo) {
         this.urlInfo = urlInfo;
     }
+
+    public void execute(){
+        try {
+            Object toExecute = controllerClass.getDeclaredConstructor().newInstance();
+            actionMethod.invoke(toExecute);
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+    }
 }
+

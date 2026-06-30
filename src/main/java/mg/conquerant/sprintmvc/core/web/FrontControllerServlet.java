@@ -78,6 +78,8 @@ public class FrontControllerServlet extends HttpServlet {
         out.print("<h2>");
         if (routesMapping.containsKey(urlInfo)) {
             out.print(" We have this resource but we also have : ");
+            MethodMapping toTest = routesMapping.get(urlInfo);
+            toTest.execute();
         } else {
             out.print("We dont have the requested ressource but instead we have :");
         }
