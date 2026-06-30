@@ -5,10 +5,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import mg.conquerant.sprintmvc.annotation.HTTPMethod;
-import mg.conquerant.sprintmvc.annotation.UrlMapping;
 import mg.conquerant.sprintmvc.core.mapping.MethodMapping;
 import mg.conquerant.sprintmvc.core.mapping.UrlInfo;
+import mg.conquerant.sprintmvc.core.annotation.HTTPMethod;
+import mg.conquerant.sprintmvc.core.annotation.UrlMapping;
+import mg.conquerant.sprintmvc.core.exception.UrlRepetitionException;
 
 public class MappingBuilder {
 
@@ -24,7 +25,11 @@ public class MappingBuilder {
                     UrlMapping urlMapping = toAnalyze.getAnnotation(UrlMapping.class);
                     String path = urlMapping.path();
                     HTTPMethod urlMethod = urlMapping.method();
-                    methodMap.put(new UrlInfo(path,urlMethod), buildMapping(toAnalyze, controller, path, urlMethod));
+                    UrlInfo test = new UrlInfo(path,urlMethod);
+                    if ( methodMap.containsKey(test) ){
+                        throw new UrlRepetitionException(toAnalyze,test);
+                    }
+                    methodMap.put(test, buildMapping(toAnalyze, controller, path, urlMethod));
                 }
             }
         }
