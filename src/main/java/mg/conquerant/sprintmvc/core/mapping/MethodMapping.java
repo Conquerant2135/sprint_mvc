@@ -5,6 +5,7 @@ import java.lang.reflect.Parameter;
 
 import mg.conquerant.sprintmvc.core.annotation.HTTPMethod;
 
+
 public class MethodMapping {
 
     private Class<?> controllerClass;
@@ -77,4 +78,14 @@ public class MethodMapping {
     public void setUrlInfo(UrlInfo urlInfo) {
         this.urlInfo = urlInfo;
     }
+
+    public void execute(){
+        try {
+            Object toExecute = controllerClass.getDeclaredConstructor().newInstance();
+            actionMethod.invoke(toExecute);
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+    }
 }
+
