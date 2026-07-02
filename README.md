@@ -25,7 +25,8 @@ C'est le format du fichier
     <display-name> Servlet for framework setup </display-name>
 
     <!--
-        C'est le serveur     
+        Definition de la servlet principale , base du framework
+        Centre de controlle de l'application
     -->
     <servlet>
         <servlet-name>FrontControllerServlet</servlet-name>
@@ -49,11 +50,18 @@ C'est le format du fichier
         dans context param pour etre accessible sans servlet
         c'est donc dans le scope global
     -->
+
+    <!-- 
+        Exemple de definition des packages a scan par l'application 
+     -->
     <context-param>
         <param-name>package_list</param-name>
         <param-value>mg.conquerant.sprinttest.controller;mg.conquerant.sprinttest.test</param-value>
     </context-param>
 
+    <!--
+     Separateur de liste modifiable 
+    -->
     <context-param>
         <param-name>list_separator</param-name>
         <param-value>;</param-value>
