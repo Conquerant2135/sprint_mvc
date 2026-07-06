@@ -78,13 +78,14 @@ public class MethodMapping {
         this.urlInfo = urlInfo;
     }
 
-    public void execute(){
+    public Object execute(){
         try {
             Object toExecute = controllerClass.getDeclaredConstructor().newInstance();
-            actionMethod.invoke(toExecute);
+            return actionMethod.invoke(toExecute);
         } catch (Exception e){
             e.printStackTrace();
         }
+        return null;
     }
 }
 

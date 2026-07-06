@@ -1,7 +1,6 @@
 package mg.conquerant.sprintmvc.core.web;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.List;
 import java.util.Map;
 
@@ -11,11 +10,14 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import mg.conquerant.sprintmvc.core.mapping.MethodMapping;
 import mg.conquerant.sprintmvc.core.mapping.UrlInfo;
+import mg.conquerant.sprintmvc.core.web.view.ModelAndView;
+import mg.conquerant.sprintmvc.core.web.view.ViewResolver;
 
 public class FrontControllerServlet extends HttpServlet {
 
     private List<Class<?>> classList;
     private Map<UrlInfo, MethodMapping> routesMapping;
+    private ViewResolver viewResolver;
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -32,42 +34,28 @@ public class FrontControllerServlet extends HttpServlet {
     @Override
     public void init() throws ServletException {
         classList = (List<Class<?>>) getServletContext().getAttribute("controllerList");
-        routesMapping =  (Map<UrlInfo, MethodMapping>) getServletContext().getAttribute("routesMapping");
+        routesMapping = (Map<UrlInfo, MethodMapping>) getServletContext().getAttribute("routesMapping");
+        String suffix = getInitParameter("suffix");
+        String prefix = getInitParameter("prefix");
+        viewResolver = new ViewResolver();
+        viewResolver.setPrefix(prefix);
+        viewResolver.setSuffix(suffix);
     }
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        PrintWriter out = response.getWriter();
-        response.setContentType("text/html");
-        out.println("<p> The method : " + request.getMethod() + "</p>");
-        out.println("<p> The called URL : " + request.getRequestURL() + "</p>");
-        out.println("<p> The called URI : " + request.getRequestURI() + "</p>");
-        out.println("<h1> Class list : </h1>");
-        out.println("<ul>");
-
-        for (Class<?> cls : classList) {
-            out.println("<li>" + cls.getName() + "</li>");
-        }
-        out.println("</ul>");
         String contextPath = request.getContextPath();
         String targetResource = request.getRequestURI().substring(contextPath.length());
 
         UrlInfo urlInfo = new UrlInfo(targetResource, null);
         urlInfo.setMethod(request.getMethod());
-        out.print(urlInfo);
-        out.print("<h2>");
-        if (routesMapping.containsKey(urlInfo)) {
-            out.print(" We have this resource but we also have : ");
-            MethodMapping toTest = routesMapping.get(urlInfo);
-            toTest.execute();
-        } else {
-            out.print("We dont have the requested ressource but instead we have :");
-        }
 
-        out.println("</h2>");
-        out.println("<ul>");
-        for (MethodMapping methodMapping : routesMapping.values()) {
-            out.println("<li> " + methodMapping + " </li>");
+        if (routesMapping.containsKey(urlInfo)) {
+
+            Object res = routesMapping.get(urlInfo).execute();
+
+            if (res instanceof ModelAndView mv) {
+                viewResolver.render(mv, request, response);
+            }
         }
-        out.println("</ul>");
     }
 }

@@ -31,28 +31,38 @@ C'est le format du fichier
     <servlet>
         <servlet-name>FrontControllerServlet</servlet-name>
         <servlet-class>mg.conquerant.sprintmvc.core.web.FrontControllerServlet</servlet-class>
+        <!-- Configuration du prefixe du chemin -->
+        <init-param>
+            <param-name>prefix</param-name>
+            <param-value>WEB-INF/jsp/</param-value>
+        </init-param>
+        <!-- Configuration de la terminaison du fichier -->
+        <init-param>
+            <param-name>suffix</param-name>
+            <param-value>.jsp</param-value>
+        </init-param>
     </servlet>
 
     <servlet-mapping>
         <servlet-name>FrontControllerServlet</servlet-name>
-        <url-pattern>/*</url-pattern>
+        <url-pattern>/</url-pattern>
     </servlet-mapping>
 
-    <!-- 
+    <!--
         Declaration de la classe du ServletContextListener de notre application
     -->
     <listener>
         <listener-class>mg.conquerant.sprintmvc.core.web.InitializerContextListener</listener-class>
     </listener>
 
-    <!-- 
-        On met les parametres a passer aux contextListener 
+    <!--
+        On met les parametres a passer aux contextListener
         dans context param pour etre accessible sans servlet
         c'est donc dans le scope global
     -->
 
-    <!-- 
-        Exemple de definition des packages a scan par l'application 
+    <!--
+        Exemple de definition des packages a scan par l'application
      -->
     <context-param>
         <param-name>package_list</param-name>
@@ -60,7 +70,7 @@ C'est le format du fichier
     </context-param>
 
     <!--
-     Separateur de liste modifiable 
+     Separateur de liste modifiable
     -->
     <context-param>
         <param-name>list_separator</param-name>
@@ -68,7 +78,6 @@ C'est le format du fichier
     </context-param>
 
 </web-app>
-
 ```
 
 ## Livrable
