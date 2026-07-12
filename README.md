@@ -15,7 +15,6 @@ Pour pouvoir bien utiliser dans l'application client il faut mettre en place un 
 C'est le format du fichier
 
 ```xml
-
 <?xml version="1.0" encoding="UTF-8"?>
 <web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -31,16 +30,6 @@ C'est le format du fichier
     <servlet>
         <servlet-name>FrontControllerServlet</servlet-name>
         <servlet-class>mg.conquerant.sprintmvc.core.web.FrontControllerServlet</servlet-class>
-        <!-- Configuration du prefixe du chemin -->
-        <init-param>
-            <param-name>prefix</param-name>
-            <param-value>WEB-INF/jsp/</param-value>
-        </init-param>
-        <!-- Configuration de la terminaison du fichier -->
-        <init-param>
-            <param-name>suffix</param-name>
-            <param-value>.jsp</param-value>
-        </init-param>
     </servlet>
 
     <servlet-mapping>
@@ -75,6 +64,22 @@ C'est le format du fichier
     <context-param>
         <param-name>list_separator</param-name>
         <param-value>;</param-value>
+    </context-param>
+
+    <!--
+  	    Configuration du prefixe du chemin
+    -->
+    <context-param>
+        <param-name>prefix</param-name>
+        <param-value>WEB-INF/jsp/</param-value>
+    </context-param>
+
+    <!--
+  	    Configuration de la terminaison du fichier
+    -->
+    <context-param>
+        <param-name>suffix</param-name>
+        <param-value>.jsp</param-value>
     </context-param>
 
 </web-app>
