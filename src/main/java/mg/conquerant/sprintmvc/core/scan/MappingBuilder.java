@@ -5,19 +5,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import mg.conquerant.sprintmvc.core.mapping.MethodMapping;
-import mg.conquerant.sprintmvc.core.mapping.UrlInfo;
 import mg.conquerant.sprintmvc.core.annotation.HTTPMethod;
 import mg.conquerant.sprintmvc.core.annotation.UrlMapping;
 import mg.conquerant.sprintmvc.core.exception.UrlRepetitionException;
+import mg.conquerant.sprintmvc.core.mapping.MethodMapping;
+import mg.conquerant.sprintmvc.core.mapping.UrlInfo;
 
 public class MappingBuilder {
 
     private MappingBuilder() {
     }
 
-    public static Map<UrlInfo, MethodMapping> scanAndBuildMapping(List<Class<?>> controllerList) {
-        Map<UrlInfo, MethodMapping> methodMap = new HashMap<>();
+    public static void buildRoutesMapping(Map<UrlInfo, MethodMapping> routesMapping ,  List<Class<?>> controllerList) {
         for (Class<?> controller : controllerList) {
             Method[] methods = controller.getDeclaredMethods();
             for (Method toAnalyze : methods) {
@@ -26,15 +25,13 @@ public class MappingBuilder {
                     String path = urlMapping.path();
                     HTTPMethod urlMethod = urlMapping.method();
                     UrlInfo test = new UrlInfo(path,urlMethod);
-                    if ( methodMap.containsKey(test) ){
+                    if ( routesMapping.containsKey(test) ){
                         throw new UrlRepetitionException(toAnalyze,test);
                     }
-                    methodMap.put(test, buildMapping(toAnalyze, controller, path, urlMethod));
+                    routesMapping.put(test, buildMapping(toAnalyze, controller, path, urlMethod));
                 }
             }
         }
-        
-        return methodMap;
     }
 
     public static MethodMapping buildMapping(Method method, Class<?> controller, String path, HTTPMethod urlMethod) {
