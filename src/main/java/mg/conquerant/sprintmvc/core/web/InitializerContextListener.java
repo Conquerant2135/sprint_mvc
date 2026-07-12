@@ -1,6 +1,7 @@
 package mg.conquerant.sprintmvc.core.web;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -10,6 +11,7 @@ import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
 import mg.conquerant.sprintmvc.core.annotation.Controller;
+import mg.conquerant.sprintmvc.core.annotation.UrlMapping;
 import mg.conquerant.sprintmvc.core.mapping.MethodMapping;
 import mg.conquerant.sprintmvc.core.mapping.UrlInfo;
 import mg.conquerant.sprintmvc.core.scan.MappingBuilder;
@@ -25,22 +27,18 @@ public class InitializerContextListener implements ServletContextListener {
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
+
         ServletContext appContext = sce.getServletContext();
         String blockPackage = appContext.getInitParameter("package_list");
         String separator = appContext.getInitParameter("list_separator");
         String[] packageList = blockPackage.split(separator);
-        Set<Class<?>> withAnnotation = new HashSet<>();
+
         ClasspathAnalyzer clp = new ClasspathAnalyzer();
-        List<Class<?>> classList;
-        Map<UrlInfo, MethodMapping> routesMapping;
+        Set<Class<?>> classList = new HashSet<>();
+        Map<UrlInfo, MethodMapping> routesMapping = new HashMap<>();
 
         for (String pkg : packageList) {
-            classList = clp.classList(pkg);
-            for (Class<?> cls : classList) {
-                if (cls.isAnnotationPresent(Controller.class)) {
-                    withAnnotation.add(cls);
-                }
-            }
+            classList.addAll(clp.classList(pkg , Controller.class));
         }
 
         String suffix = appContext.getInitParameter("suffix");
@@ -49,11 +47,10 @@ public class InitializerContextListener implements ServletContextListener {
         viewResolver.setPrefix(prefix);
         viewResolver.setSuffix(suffix);
 
-        classList = new ArrayList<>(withAnnotation);
-        routesMapping = MappingBuilder.scanAndBuildMapping(classList);
+        List<Class<?>> uniqueClassList = new ArrayList<>(classList);
+        MappingBuilder.buildRoutesMapping(routesMapping , uniqueClassList);
 
         appContext.setAttribute("routesMapping", routesMapping);
-        appContext.setAttribute("controllerList", classList);
         appContext.setAttribute("viewResolver", viewResolver);
 
     }

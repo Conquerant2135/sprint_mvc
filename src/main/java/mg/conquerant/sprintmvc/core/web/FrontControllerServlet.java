@@ -15,7 +15,6 @@ import mg.conquerant.sprintmvc.core.web.view.ViewResolver;
 
 public class FrontControllerServlet extends HttpServlet {
 
-    private List<Class<?>> classList;
     private Map<UrlInfo, MethodMapping> routesMapping;
     private ViewResolver viewResolver;
 
@@ -33,7 +32,6 @@ public class FrontControllerServlet extends HttpServlet {
 
     @Override
     public void init() throws ServletException {
-        classList = (List<Class<?>>) getServletContext().getAttribute("controllerList");
         routesMapping = (Map<UrlInfo, MethodMapping>) getServletContext().getAttribute("routesMapping");
         viewResolver = (ViewResolver) getServletContext().getAttribute("viewResolver");
     }

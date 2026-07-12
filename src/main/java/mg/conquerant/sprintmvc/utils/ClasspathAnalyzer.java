@@ -1,6 +1,7 @@
 package mg.conquerant.sprintmvc.utils;
 
 import java.io.File;
+import java.lang.annotation.Annotation;
 import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
@@ -17,7 +18,7 @@ public class ClasspathAnalyzer {
      * The method scan the classpath of the actual working application
      * Get all the classes present
      */
-    public List<Class<?>> classList(String targetPackage) {
+    public List<Class<?>> classList(String targetPackage , Class<? extends Annotation> targetAnnotation) {
         classList = new ArrayList<>();
         String targetPackagePath = targetPackage.replace(".", File.separator);
         ClassLoader classLoader = ClasspathAnalyzer.class.getClassLoader();
@@ -31,7 +32,7 @@ public class ClasspathAnalyzer {
             } else {
                 rootDirectoryPath = getRootPath();
             }
-            findClass(rootDirectory.listFiles(), rootDirectoryPath);
+            findClass(rootDirectory.listFiles(), rootDirectoryPath, targetAnnotation);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -66,13 +67,13 @@ public class ClasspathAnalyzer {
      * @param rootDirectoryPath The root directory of the project for removing it
      *                          from the class url
      */
-    public void findClass(File[] toAnalyze, String rootDirectoryPath) {
+    public void findClass(File[] toAnalyze, String rootDirectoryPath, Class<? extends Annotation> targetAnnotation) {
         if (toAnalyze == null)
             return;
         for (File file : toAnalyze) {
             if (file.isDirectory()) {
 
-                findClass(file.listFiles(), rootDirectoryPath);
+                findClass(file.listFiles(), rootDirectoryPath , targetAnnotation);
 
             } else if (file.getName().endsWith(".class")) {
                 String temp = file.getPath();
@@ -81,7 +82,9 @@ public class ClasspathAnalyzer {
                         .replace(".class", "");
                 try {
                     ClassLoader cl = Thread.currentThread().getContextClassLoader();
-                    classList.add(Class.forName(className, true, cl));
+                    Class<?> toStudy = Class.forName(className, true, cl);
+                    if ( toStudy.isAnnotationPresent(targetAnnotation))
+                        classList.add(toStudy);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
