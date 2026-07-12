@@ -13,6 +13,7 @@ import mg.conquerant.sprintmvc.core.annotation.Controller;
 import mg.conquerant.sprintmvc.core.mapping.MethodMapping;
 import mg.conquerant.sprintmvc.core.mapping.UrlInfo;
 import mg.conquerant.sprintmvc.core.scan.MappingBuilder;
+import mg.conquerant.sprintmvc.core.web.view.ViewResolver;
 import mg.conquerant.sprintmvc.utils.ClasspathAnalyzer;
 
 public class InitializerContextListener implements ServletContextListener {
@@ -42,15 +43,18 @@ public class InitializerContextListener implements ServletContextListener {
             }
         }
 
-        System.out.println("InitializerContextListener triggered");
-        System.out.println("Packages: " + blockPackage);
-        System.out.println("Controllers found: " + withAnnotation.size());
+        String suffix = appContext.getInitParameter("suffix");
+        String prefix = appContext.getInitParameter("prefix");
+        ViewResolver viewResolver = new ViewResolver();
+        viewResolver.setPrefix(prefix);
+        viewResolver.setSuffix(suffix);
 
         classList = new ArrayList<>(withAnnotation);
         routesMapping = MappingBuilder.scanAndBuildMapping(classList);
 
         appContext.setAttribute("routesMapping", routesMapping);
         appContext.setAttribute("controllerList", classList);
+        appContext.setAttribute("viewResolver", viewResolver);
 
     }
 }

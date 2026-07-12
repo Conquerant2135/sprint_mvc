@@ -35,11 +35,7 @@ public class FrontControllerServlet extends HttpServlet {
     public void init() throws ServletException {
         classList = (List<Class<?>>) getServletContext().getAttribute("controllerList");
         routesMapping = (Map<UrlInfo, MethodMapping>) getServletContext().getAttribute("routesMapping");
-        String suffix = getInitParameter("suffix");
-        String prefix = getInitParameter("prefix");
-        viewResolver = new ViewResolver();
-        viewResolver.setPrefix(prefix);
-        viewResolver.setSuffix(suffix);
+        viewResolver = (ViewResolver) getServletContext().getAttribute("viewResolver");
     }
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws IOException {
