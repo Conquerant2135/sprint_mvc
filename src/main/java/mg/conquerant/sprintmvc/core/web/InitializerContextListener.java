@@ -17,6 +17,7 @@ import mg.conquerant.sprintmvc.core.mapping.UrlInfo;
 import mg.conquerant.sprintmvc.core.scan.MappingBuilder;
 import mg.conquerant.sprintmvc.core.web.view.ViewResolver;
 import mg.conquerant.sprintmvc.utils.ClasspathAnalyzer;
+import org.springframework.web.context.support.WebApplicationContextUtils;
 
 public class InitializerContextListener implements ServletContextListener {
 
@@ -52,6 +53,6 @@ public class InitializerContextListener implements ServletContextListener {
 
         appContext.setAttribute("routesMapping", routesMapping);
         appContext.setAttribute("viewResolver", viewResolver);
-
+        appContext.setAttribute("springContext" , WebApplicationContextUtils.getWebApplicationContext(appContext));
     }
 }
