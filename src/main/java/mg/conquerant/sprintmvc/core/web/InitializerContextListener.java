@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.springframework.context.ApplicationContext;
+
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
@@ -17,7 +19,12 @@ import mg.conquerant.sprintmvc.core.mapping.UrlInfo;
 import mg.conquerant.sprintmvc.core.scan.MappingBuilder;
 import mg.conquerant.sprintmvc.core.web.view.ViewResolver;
 import mg.conquerant.sprintmvc.utils.ClasspathAnalyzer;
+
 import org.springframework.web.context.support.WebApplicationContextUtils;
+
+import mg.conquerant.sprintmvc.core.context.ApplicationContainer;
+import mg.conquerant.sprintmvc.core.context.DefaultApplicationContainer;
+import mg.conquerant.sprintmvc.core.context.SpringApplicationContainer;
 
 public class InitializerContextListener implements ServletContextListener {
 
@@ -51,8 +58,17 @@ public class InitializerContextListener implements ServletContextListener {
         List<Class<?>> uniqueClassList = new ArrayList<>(classList);
         MappingBuilder.buildRoutesMapping(routesMapping , uniqueClassList);
 
+        ApplicationContext springContext = WebApplicationContextUtils.getWebApplicationContext(appContext);
+        ApplicationContainer appContainer;
+
+        if (springContext != null) {
+            appContainer = new SpringApplicationContainer(springContext);
+        } else {
+            appContainer = new DefaultApplicationContainer();
+        }
+
         appContext.setAttribute("routesMapping", routesMapping);
         appContext.setAttribute("viewResolver", viewResolver);
-        appContext.setAttribute("springContext" , WebApplicationContextUtils.getWebApplicationContext(appContext));
+        appContext.setAttribute("beanContainer" , appContainer);
     }
 }

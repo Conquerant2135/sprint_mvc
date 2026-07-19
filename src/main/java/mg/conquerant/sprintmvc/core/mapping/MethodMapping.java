@@ -2,9 +2,9 @@ package mg.conquerant.sprintmvc.core.mapping;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import org.springframework.context.ApplicationContext;
 
 import mg.conquerant.sprintmvc.core.annotation.HTTPMethod;
+import mg.conquerant.sprintmvc.core.context.ApplicationContainer;
 
 public class MethodMapping {
 
@@ -79,10 +79,10 @@ public class MethodMapping {
         this.urlInfo = urlInfo;
     }
 
-    public Object execute(ApplicationContext app){
+    public Object execute(ApplicationContainer beanContainer){
         try {
-            Object toExecute = controllerClass.getDeclaredConstructor().newInstance();
-            return actionMethod.invoke(toExecute , app);
+            Object toExecute = beanContainer.getBean(controllerClass);
+            return actionMethod.invoke(toExecute , beanContainer);
         } catch (Exception e){
             e.printStackTrace();
         }
