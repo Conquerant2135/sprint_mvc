@@ -22,7 +22,26 @@ C'est le format du fichier
     version="3.1">
 
     <display-name> Servlet for framework setup </display-name>
-
+  	<!--
+		Ces 2 parametres suivant sont optionnels
+  		Sauf si l'application client veut utiliser spring 
+  	
+  		Indication a spring de la classe de configuration principale si on 
+  		utilise spring dans la partie client
+  	-->
+	<context-param>
+    	<param-name>contextConfigLocation</param-name>
+    	<param-value>mg.conquerant.sprinttest.config.SpringConfig</param-value>
+	</context-param>
+  	<!-- 
+  		Indication de l'utilisation du Context listener de spring 
+  	-->
+  	<listener>
+    	<listener-class>
+        	org.springframework.web.context.ContextLoaderListener
+    	</listener-class>
+	</listener>
+  
     <!--
         Definition de la servlet principale , base du framework
         Centre de controlle de l'application
@@ -84,6 +103,8 @@ C'est le format du fichier
 
 </web-app>
 ```
+
+    
 
 ## Livrable
 

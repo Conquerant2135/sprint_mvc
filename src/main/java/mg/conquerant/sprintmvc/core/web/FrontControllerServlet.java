@@ -1,13 +1,13 @@
 package mg.conquerant.sprintmvc.core.web;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import mg.conquerant.sprintmvc.core.context.ApplicationContainer;
 import mg.conquerant.sprintmvc.core.mapping.MethodMapping;
 import mg.conquerant.sprintmvc.core.mapping.UrlInfo;
 import mg.conquerant.sprintmvc.core.web.view.ModelAndView;
@@ -17,6 +17,7 @@ public class FrontControllerServlet extends HttpServlet {
 
     private Map<UrlInfo, MethodMapping> routesMapping;
     private ViewResolver viewResolver;
+    private ApplicationContainer beanContainer;
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -34,6 +35,7 @@ public class FrontControllerServlet extends HttpServlet {
     public void init() throws ServletException {
         routesMapping = (Map<UrlInfo, MethodMapping>) getServletContext().getAttribute("routesMapping");
         viewResolver = (ViewResolver) getServletContext().getAttribute("viewResolver");
+        beanContainer = (ApplicationContainer) getServletContext().getAttribute("beanContainer");
     }
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -45,7 +47,7 @@ public class FrontControllerServlet extends HttpServlet {
 
         if (routesMapping.containsKey(urlInfo)) {
 
-            Object res = routesMapping.get(urlInfo).execute();
+            Object res = routesMapping.get(urlInfo).execute(beanContainer);
 
             if (res instanceof ModelAndView mv) {
                 viewResolver.render(mv, request, response);
