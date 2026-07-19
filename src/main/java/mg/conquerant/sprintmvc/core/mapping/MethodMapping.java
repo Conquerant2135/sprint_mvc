@@ -82,7 +82,7 @@ public class MethodMapping {
     public Object execute(ApplicationContainer beanContainer){
         try {
             Object toExecute = beanContainer.getBean(controllerClass);
-            return actionMethod.invoke(toExecute , beanContainer);
+            return actionMethod.invoke(toExecute);
         } catch (Exception e){
             e.printStackTrace();
         }
