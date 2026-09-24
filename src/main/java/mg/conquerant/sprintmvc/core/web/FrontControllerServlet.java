@@ -3,6 +3,9 @@ package mg.conquerant.sprintmvc.core.web;
 import java.io.IOException;
 import java.util.Map;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,6 +21,7 @@ public class FrontControllerServlet extends HttpServlet {
     private Map<UrlInfo, MethodMapping> routesMapping;
     private ViewResolver viewResolver;
     private ApplicationContainer beanContainer;
+    private ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -51,6 +55,12 @@ public class FrontControllerServlet extends HttpServlet {
 
             if (res instanceof ModelAndView mv) {
                 viewResolver.render(mv, request, response);
+            } else {
+                MethodMapping toTest = routesMapping.get(urlInfo);
+                if (toTest.isJson()) {
+                    response.setContentType("application/json");
+                    response.getOutputStream().println(ow.writeValueAsString(toTest.execute(beanContainer)));
+                }
             }
         }
     }
