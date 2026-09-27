@@ -10,6 +10,10 @@ import java.util.Set;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
@@ -22,6 +26,11 @@ import mg.conquerant.sprintmvc.core.mapping.UrlInfo;
 import mg.conquerant.sprintmvc.core.scan.MappingBuilder;
 import mg.conquerant.sprintmvc.core.web.view.ViewResolver;
 import mg.conquerant.sprintmvc.utils.ClasspathAnalyzer;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
 
 public class InitializerContextListener implements ServletContextListener {
 
@@ -43,7 +52,7 @@ public class InitializerContextListener implements ServletContextListener {
         Map<UrlInfo, MethodMapping> routesMapping = new HashMap<>();
 
         for (String pkg : packageList) {
-            classList.addAll(clp.classList(pkg , Controller.class));
+            classList.addAll(clp.classList(pkg, Controller.class));
         }
 
         String suffix = appContext.getInitParameter("suffix");
@@ -53,7 +62,7 @@ public class InitializerContextListener implements ServletContextListener {
         viewResolver.setSuffix(suffix);
 
         List<Class<?>> uniqueClassList = new ArrayList<>(classList);
-        MappingBuilder.buildRoutesMapping(routesMapping , uniqueClassList);
+        MappingBuilder.buildRoutesMapping(routesMapping, uniqueClassList);
 
         ApplicationContext springContext = WebApplicationContextUtils.getWebApplicationContext(appContext);
         ApplicationContainer appContainer;
@@ -64,8 +73,16 @@ public class InitializerContextListener implements ServletContextListener {
             appContainer = new DefaultApplicationContainer();
         }
 
+        ObjectWriter writer = new ObjectMapper()
+                .registerModule(new JavaTimeModule())
+                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+                .writer()
+                .withDefaultPrettyPrinter();
+        
+
+        appContext.setAttribute("objectWriter", writer);
         appContext.setAttribute("routesMapping", routesMapping);
         appContext.setAttribute("viewResolver", viewResolver);
-        appContext.setAttribute("beanContainer" , appContainer);
+        appContext.setAttribute("beanContainer", appContainer);
     }
 }
