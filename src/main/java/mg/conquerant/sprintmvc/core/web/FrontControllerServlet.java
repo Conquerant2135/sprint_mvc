@@ -3,11 +3,6 @@ package mg.conquerant.sprintmvc.core.web;
 import java.io.IOException;
 import java.util.Map;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,7 +18,6 @@ public class FrontControllerServlet extends HttpServlet {
     private Map<UrlInfo, MethodMapping> routesMapping;
     private ViewResolver viewResolver;
     private ApplicationContainer beanContainer;
-    private ObjectWriter ow;
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -39,14 +33,9 @@ public class FrontControllerServlet extends HttpServlet {
 
     @Override
     public void init() throws ServletException {
-        try {
-            routesMapping = (Map<UrlInfo, MethodMapping>) getServletContext().getAttribute("routesMapping");
-            viewResolver = (ViewResolver) getServletContext().getAttribute("viewResolver");
-            beanContainer = (ApplicationContainer) getServletContext().getAttribute("beanContainer");
-            ow = (ObjectWriter) getServletContext().getAttribute("objectWriter");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        routesMapping = (Map<UrlInfo, MethodMapping>) getServletContext().getAttribute("routesMapping");
+        viewResolver = (ViewResolver) getServletContext().getAttribute("viewResolver");
+        beanContainer = (ApplicationContainer) getServletContext().getAttribute("beanContainer");
     }
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -62,14 +51,6 @@ public class FrontControllerServlet extends HttpServlet {
 
             if (res instanceof ModelAndView mv) {
                 viewResolver.render(mv, request, response);
-            } else if (res instanceof String ressource) {
-                viewResolver.render(new ModelAndView(ressource), request, response);
-            } else {
-                MethodMapping toTest = routesMapping.get(urlInfo);
-                if (toTest.isJson()) {
-                    response.setContentType("application/json");
-                    response.getOutputStream().println(ow.writeValueAsString(toTest.execute(beanContainer)));
-                }
             }
         }
     }
