@@ -13,9 +13,6 @@ public class MethodMapping {
     private String path;
     private HTTPMethod urlMethod;
     private UrlInfo urlInfo;
-    private boolean json;
-
-    
 
     public HTTPMethod getUrlMethod(){
         return urlMethod;
@@ -90,14 +87,6 @@ public class MethodMapping {
             e.printStackTrace();
         }
         return null;
-    }
-
-    public boolean isJson() {
-        return json;
-    }
-
-    public void setJson(boolean json) {
-        this.json = json;
     }
 }
 
