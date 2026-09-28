@@ -48,9 +48,14 @@ public class FrontControllerServlet extends HttpServlet {
         if (routesMapping.containsKey(urlInfo)) {
 
             Object res = routesMapping.get(urlInfo).execute(beanContainer);
-
+            MethodMapping toTest = routesMapping.get(urlInfo);
             if (res instanceof ModelAndView mv) {
                 viewResolver.render(mv, request, response);
+            } else if (toTest.isJson()) {
+                response.setContentType("application/json");
+                response.getOutputStream().println(ow.writeValueAsString(toTest.execute(beanContainer)));
+            } else if (res instanceof String ressource) {
+                viewResolver.render(new ModelAndView(ressource), request, response);
             }
         }
     }
