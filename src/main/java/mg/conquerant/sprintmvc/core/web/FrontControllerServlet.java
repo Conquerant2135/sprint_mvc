@@ -20,7 +20,6 @@ public class FrontControllerServlet extends HttpServlet {
     private Map<UrlInfo, MethodMapping> routesMapping;
     private ViewResolver viewResolver;
     private ApplicationContainer beanContainer;
-    private ObjectWriter ow;
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -36,14 +35,9 @@ public class FrontControllerServlet extends HttpServlet {
 
     @Override
     public void init() throws ServletException {
-        try {
-            routesMapping = (Map<UrlInfo, MethodMapping>) getServletContext().getAttribute("routesMapping");
-            viewResolver = (ViewResolver) getServletContext().getAttribute("viewResolver");
-            beanContainer = (ApplicationContainer) getServletContext().getAttribute("beanContainer");
-            ow = (ObjectWriter) getServletContext().getAttribute("objectWriter");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        routesMapping = (Map<UrlInfo, MethodMapping>) getServletContext().getAttribute("routesMapping");
+        viewResolver = (ViewResolver) getServletContext().getAttribute("viewResolver");
+        beanContainer = (ApplicationContainer) getServletContext().getAttribute("beanContainer");
     }
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws IOException {
