@@ -2,7 +2,6 @@ package mg.conquerant.sprintmvc.core.mapping;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.util.Arrays;
 
 import jakarta.servlet.http.HttpServletRequest;
 import mg.conquerant.sprintmvc.core.annotation.HTTPMethod;
@@ -15,7 +14,8 @@ public class MethodMapping {
     private UrlInfo urlInfo;
     private boolean json;
 
-    public Object execute(ApplicationContainer beanContainer, HttpServletRequest request) throws IllegalArgumentException {
+    public Object execute(ApplicationContainer beanContainer, HttpServletRequest request)
+            throws IllegalArgumentException {
         try {
             Object toExecute = beanContainer.getBean(controllerClass);
             return actionMethod.invoke(toExecute, getMethodArgs(request));
@@ -26,9 +26,12 @@ public class MethodMapping {
     }
 
     private Object[] getMethodArgs(HttpServletRequest request) throws IllegalArgumentException {
-        return Arrays.stream(actionMethod.getParameters())
-                .map(param -> resolveParameter(param, request))
-                .toArray();
+        Parameter[] parameters = actionMethod.getParameters();
+        Object[] arguments = new Object[parameters.length];
+        for (int i = 0; i < parameters.length; i++) {
+            arguments[i] = resolveParameter(parameters[i], request);
+        }
+        return arguments;
     }
 
     private Object resolveParameter(Parameter param, HttpServletRequest request) throws IllegalArgumentException {
