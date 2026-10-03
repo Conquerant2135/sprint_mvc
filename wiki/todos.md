@@ -13,4 +13,11 @@
 
 
 
-## Reflechir a commenter implementer la partie creation d'objet , recuperation de DTO et tout ca
+## Reflechir a commenter implementer la partie creation d'objet , recuperation de DTO et tout ca 
+
+
+
+**Bonus:**
+
++ refactor la classe FrontControllerServlet (trop de if a l'aide)
++ refactor la clase MappingBuilder , trop bordelique aussi le scanner
