@@ -5,6 +5,7 @@ import java.lang.reflect.Parameter;
 
 import jakarta.servlet.http.HttpServletRequest;
 import mg.conquerant.sprintmvc.core.annotation.HTTPMethod;
+import mg.conquerant.sprintmvc.core.annotation.RequestParam;
 import mg.conquerant.sprintmvc.core.context.ApplicationContainer;
 
 public class MethodMapping {
@@ -35,9 +36,12 @@ public class MethodMapping {
     }
 
     private Object resolveParameter(Parameter param, HttpServletRequest request) throws IllegalArgumentException {
-        String value = request.getParameter(param.getName());
+        RequestParam definedName = param.getAnnotation(RequestParam.class);
+        String name = definedName != null ? definedName.value() : param.getName();
+
+        String value = request.getParameter(name);
         if (value == null) {
-            throw new IllegalArgumentException("This parameter is not defined : " + param.getName());
+            throw new IllegalArgumentException("This parameter is not defined : " + name);
         }
         return parseParameter(value, param.getType());
     }
