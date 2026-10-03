@@ -64,7 +64,7 @@ public class FrontControllerServlet extends HttpServlet {
                     } else {
                         response.setContentType("application/json");
                         response.getOutputStream().print(
-                                converter.toJson(toTest.execute(beanContainer, request)));
+                                converter.toJson(res));
                     }
                 } else if (res instanceof String ressource) {
                     viewResolver.render(new ModelAndView(ressource), request, response);
