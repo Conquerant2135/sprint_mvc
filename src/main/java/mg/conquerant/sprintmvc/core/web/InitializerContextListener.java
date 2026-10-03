@@ -10,10 +10,6 @@ import java.util.Set;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
@@ -26,11 +22,7 @@ import mg.conquerant.sprintmvc.core.mapping.UrlInfo;
 import mg.conquerant.sprintmvc.core.scan.MappingBuilder;
 import mg.conquerant.sprintmvc.core.web.view.ViewResolver;
 import mg.conquerant.sprintmvc.utils.ClasspathAnalyzer;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-
+import mg.conquerant.sprintmvc.utils.JsonConverter;
 
 public class InitializerContextListener implements ServletContextListener {
 
@@ -73,14 +65,10 @@ public class InitializerContextListener implements ServletContextListener {
             appContainer = new DefaultApplicationContainer();
         }
 
-        ObjectWriter writer = new ObjectMapper()
-                .registerModule(new JavaTimeModule())
-                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-                .writer()
-                .withDefaultPrettyPrinter();
+        JsonConverter converter = new JsonConverter();
         
 
-        appContext.setAttribute("objectWriter", writer);
+        appContext.setAttribute("converter", converter);
         appContext.setAttribute("routesMapping", routesMapping);
         appContext.setAttribute("viewResolver", viewResolver);
         appContext.setAttribute("beanContainer", appContainer);
