@@ -5,9 +5,9 @@ import java.lang.reflect.Parameter;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import mg.conquerant.sprintmvc.core.annotation.HTTPMethod;
 import mg.conquerant.sprintmvc.core.context.ApplicationContainer;
+import mg.conquerant.sprintmvc.utils.JsonConverter;
 
 public class MethodMapping {
 
@@ -21,6 +21,7 @@ public class MethodMapping {
         try {
             Object toExecute = beanContainer.getBean(controllerClass);
             ParameterResolver resolver = (ParameterResolver) beanContainer.getBean(ParameterResolver.class);
+            resolver.converter = (JsonConverter) beanContainer.getBean(JsonConverter.class);
             return actionMethod.invoke(toExecute, resolver.getMethodArgs(this.actionMethod, request, response));
         } catch (Exception e) {
             e.printStackTrace();
