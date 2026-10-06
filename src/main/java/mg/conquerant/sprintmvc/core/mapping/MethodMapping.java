@@ -4,6 +4,8 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import mg.conquerant.sprintmvc.core.annotation.HTTPMethod;
 import mg.conquerant.sprintmvc.core.context.ApplicationContainer;
 
@@ -14,12 +16,12 @@ public class MethodMapping {
     private UrlInfo urlInfo;
     private boolean json;
 
-    public Object execute(ApplicationContainer beanContainer, HttpServletRequest request)
+    public Object execute(ApplicationContainer beanContainer, HttpServletRequest request, HttpServletResponse response)
             throws IllegalArgumentException {
         try {
             Object toExecute = beanContainer.getBean(controllerClass);
             ParameterResolver resolver = (ParameterResolver) beanContainer.getBean(ParameterResolver.class);
-            return actionMethod.invoke(toExecute, resolver.getMethodArgs(this.actionMethod, request));
+            return actionMethod.invoke(toExecute, resolver.getMethodArgs(this.actionMethod, request, response));
         } catch (Exception e) {
             e.printStackTrace();
         }
