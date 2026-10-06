@@ -3,6 +3,9 @@ package mg.conquerant.sprintmvc.core.mapping;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import mg.conquerant.sprintmvc.core.annotation.HTTPMethod;
 import mg.conquerant.sprintmvc.core.context.ApplicationContainer;
 
@@ -10,17 +13,21 @@ public class MethodMapping {
 
     private Class<?> controllerClass;
     private Method actionMethod;
-    private String path;
-    private HTTPMethod urlMethod;
     private UrlInfo urlInfo;
     private boolean json;
 
-    
-
-    public HTTPMethod getUrlMethod(){
-        return urlMethod;
+    public Object execute(ApplicationContainer beanContainer, HttpServletRequest request, HttpServletResponse response)
+            throws IllegalArgumentException {
+        try {
+            Object toExecute = beanContainer.getBean(controllerClass);
+            ParameterResolver resolver = (ParameterResolver) beanContainer.getBean(ParameterResolver.class);
+            return actionMethod.invoke(toExecute, resolver.getMethodArgs(this.actionMethod, request, response));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
-    
+
     public Class<?> getControllerClass() {
         return controllerClass;
     }
@@ -33,45 +40,8 @@ public class MethodMapping {
         return actionMethod;
     }
 
-    public void setUrlMethod(HTTPMethod urlMethod){
-        this.urlMethod = urlMethod;
-    }
-
     public void setActionMethod(Method actionMethod) {
         this.actionMethod = actionMethod;
-    }
-
-    public String getPath() {
-        return path;
-    }
-
-    public void setPath(String path) {
-        this.path = path;
-    }
-
-    @Override
-    public String toString() {
-        String toShow = "";
-
-        toShow += "Class : " + getControllerClass().getName() + " "; 
-
-        toShow += " - Url : " + getPath();
-        toShow += " - Method name : " + getActionMethod().getName();
-        toShow += " - Parameters : ";
-
-        Parameter[] params = getActionMethod().getParameters();
-
-        for (Parameter p : params) {
-            toShow += "[name: " + p.getName() + ", type: " + p.getType().getSimpleName() + "]";
-        }
-
-        if ( getUrlMethod() == HTTPMethod.POST ){
-            toShow += " - Method : POST ";
-        } else toShow += " - Method : GET ";
-
-        toShow += " - return type : " + getActionMethod().getReturnType().getName();
-
-        return toShow;
     }
 
     public UrlInfo getUrlInfo() {
@@ -82,14 +52,30 @@ public class MethodMapping {
         this.urlInfo = urlInfo;
     }
 
-    public Object execute(ApplicationContainer beanContainer){
-        try {
-            Object toExecute = beanContainer.getBean(controllerClass);
-            return actionMethod.invoke(toExecute);
-        } catch (Exception e){
-            e.printStackTrace();
+    @Override
+    public String toString() {
+        String toShow = "";
+
+        toShow += "Class : " + getControllerClass().getName() + " ";
+
+        toShow += " - Url : " + urlInfo.getPath();
+        toShow += " - Method name : " + getActionMethod().getName();
+        toShow += " - Parameters : ";
+
+        Parameter[] params = getActionMethod().getParameters();
+
+        for (Parameter p : params) {
+            toShow += "[name: " + p.getName() + ", type: " + p.getType().getSimpleName() + "]";
         }
-        return null;
+
+        if (urlInfo.getMethod() == HTTPMethod.POST) {
+            toShow += " - Method : POST ";
+        } else
+            toShow += " - Method : GET ";
+
+        toShow += " - return type : " + getActionMethod().getReturnType().getName();
+
+        return toShow;
     }
 
     public boolean isJson() {
@@ -100,4 +86,3 @@ public class MethodMapping {
         this.json = json;
     }
 }
-

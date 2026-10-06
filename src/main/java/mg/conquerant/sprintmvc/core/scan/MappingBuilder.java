@@ -16,7 +16,7 @@ public class MappingBuilder {
     private MappingBuilder() {
     }
 
-    public static void buildRoutesMapping(Map<UrlInfo, MethodMapping> routesMapping ,  List<Class<?>> controllerList) {
+    public static void buildRoutesMapping(Map<UrlInfo, MethodMapping> routesMapping, List<Class<?>> controllerList) {
         for (Class<?> controller : controllerList) {
             Method[] methods = controller.getDeclaredMethods();
             for (Method toAnalyze : methods) {
@@ -24,23 +24,24 @@ public class MappingBuilder {
                     UrlMapping urlMapping = toAnalyze.getAnnotation(UrlMapping.class);
                     String path = urlMapping.path();
                     HTTPMethod urlMethod = urlMapping.method();
-                    UrlInfo test = new UrlInfo(path,urlMethod);
-            
-                    if ( routesMapping.containsKey(test) ){
-                        throw new UrlRepetitionException(toAnalyze,test);
+                    UrlInfo test = new UrlInfo(path, urlMethod);
+
+                    if (routesMapping.containsKey(test)) {
+                        throw new UrlRepetitionException(toAnalyze, test);
                     }
-                    routesMapping.put(test, buildMapping(toAnalyze, controller, path, urlMethod, toAnalyze.isAnnotationPresent(ResponseBody.class)));
+                    routesMapping.put(test, buildMapping(toAnalyze, controller, test,
+                            toAnalyze.isAnnotationPresent(ResponseBody.class)));
                 }
             }
         }
     }
 
-    private static MethodMapping buildMapping(Method method, Class<?> controller, String path, HTTPMethod urlMethod, boolean isJson) {
+    private static MethodMapping buildMapping(Method method, Class<?> controller, UrlInfo urlInfo,
+            boolean isJson) {
         MethodMapping methodMap = new MethodMapping();
         methodMap.setControllerClass(controller);
-        methodMap.setPath(path);
+        methodMap.setUrlInfo(urlInfo);
         methodMap.setActionMethod(method);
-        methodMap.setUrlMethod(urlMethod);
         methodMap.setJson(isJson);
         return methodMap;
     }

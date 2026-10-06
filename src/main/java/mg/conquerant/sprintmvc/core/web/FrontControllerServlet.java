@@ -3,8 +3,6 @@ package mg.conquerant.sprintmvc.core.web;
 import java.io.IOException;
 import java.util.Map;
 
-import com.fasterxml.jackson.databind.ObjectWriter;
-
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,13 +12,14 @@ import mg.conquerant.sprintmvc.core.mapping.MethodMapping;
 import mg.conquerant.sprintmvc.core.mapping.UrlInfo;
 import mg.conquerant.sprintmvc.core.web.view.ModelAndView;
 import mg.conquerant.sprintmvc.core.web.view.ViewResolver;
+import mg.conquerant.sprintmvc.utils.JsonConverter;
 
 public class FrontControllerServlet extends HttpServlet {
 
-    private Map<UrlInfo, MethodMapping> routesMapping;
-    private ViewResolver viewResolver;
-    private ApplicationContainer beanContainer;
-    private ObjectWriter ow;
+    private transient Map<UrlInfo, MethodMapping> routesMapping;
+    private transient ViewResolver viewResolver;
+    private transient ApplicationContainer beanContainer;
+    private transient JsonConverter converter;
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -34,12 +33,13 @@ public class FrontControllerServlet extends HttpServlet {
         processRequest(request, response);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void init() throws ServletException {
         routesMapping = (Map<UrlInfo, MethodMapping>) getServletContext().getAttribute("routesMapping");
         viewResolver = (ViewResolver) getServletContext().getAttribute("viewResolver");
         beanContainer = (ApplicationContainer) getServletContext().getAttribute("beanContainer");
-        ow = (ObjectWriter) getServletContext().getAttribute("objectWriter");
+        converter = (JsonConverter) getServletContext().getAttribute("converter");
     }
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -49,24 +49,29 @@ public class FrontControllerServlet extends HttpServlet {
         UrlInfo urlInfo = new UrlInfo(targetResource, null);
         urlInfo.setMethod(request.getMethod());
 
-        if (routesMapping.containsKey(urlInfo)) {
+        try {
 
-            Object res = routesMapping.get(urlInfo).execute(beanContainer);
-            MethodMapping toTest = routesMapping.get(urlInfo);
+            if (routesMapping.containsKey(urlInfo)) {
 
-            if (res instanceof ModelAndView mv) {
-                viewResolver.render(mv, request, response);
-            }  else if (toTest.isJson()) {
-                if (res instanceof String ressource) {
-                    response.getOutputStream().println(ressource);
-                } else {
-                    response.setContentType("application/json");
+                Object res = routesMapping.get(urlInfo).execute(beanContainer, request, response);
+                MethodMapping toTest = routesMapping.get(urlInfo);
 
-                    response.getOutputStream().println(ow.writeValueAsString(toTest.execute(beanContainer)));
+                if (res instanceof ModelAndView mv) {
+                    viewResolver.render(mv, request, response);
+                } else if (toTest.isJson()) {
+                    if (res instanceof String ressource) {
+                        response.getOutputStream().print(ressource);
+                    } else {
+                        response.setContentType("application/json");
+                        response.getOutputStream().print(
+                                converter.toJson(res));
+                    }
+                } else if (res instanceof String ressource) {
+                    viewResolver.render(new ModelAndView(ressource), request, response);
                 }
-            }  else if (res instanceof String ressource) {
-                viewResolver.render(new ModelAndView(ressource), request, response);
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }
