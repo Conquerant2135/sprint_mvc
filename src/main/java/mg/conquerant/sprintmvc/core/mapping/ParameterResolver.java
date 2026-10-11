@@ -3,6 +3,7 @@ package mg.conquerant.sprintmvc.core.mapping;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -158,23 +159,29 @@ public class ParameterResolver {
             HttpServletResponse response) {
         try {
             Object toReturnInstance = toReturn.getDeclaredConstructor().newInstance();
-            for (Field field : toReturn.getDeclaredFields()) {
-                Class<?> fieldType = field.getType();
-                String fieldName = field.getName();
-                Object valueToInject = null;
-                if (HttpServletRequest.class.isAssignableFrom(fieldType)) {
-                    valueToInject = request;
-                } else if (HttpServletResponse.class.isAssignableFrom(fieldType)) {
-                    valueToInject = response;
-                } else if (HttpSession.class.isAssignableFrom(fieldType)) {
-                    valueToInject = request.getSession();
-                } else {
-                    key.push(fieldName);
-                    valueToInject = resolve(responses, key, field.getGenericType(), request, response);
-                    key.pop();
-                }
-                if (valueToInject != null) {
-                    invokeSetter(toReturn, toReturnInstance, fieldName, fieldType, valueToInject);
+            for (Class<?> c = toReturn; c != null && c != Object.class; c = c.getSuperclass()) {
+
+                for (Field field : c.getDeclaredFields()) {
+
+                    if (Modifier.isStatic(field.getModifiers()))
+                        continue;
+                    Class<?> fieldType = field.getType();
+                    String fieldName = field.getName();
+                    Object valueToInject = null;
+                    if (HttpServletRequest.class.isAssignableFrom(fieldType)) {
+                        valueToInject = request;
+                    } else if (HttpServletResponse.class.isAssignableFrom(fieldType)) {
+                        valueToInject = response;
+                    } else if (HttpSession.class.isAssignableFrom(fieldType)) {
+                        valueToInject = request.getSession();
+                    } else {
+                        key.push(fieldName);
+                        valueToInject = resolve(responses, key, field.getGenericType(), request, response);
+                        key.pop();
+                    }
+                    if (valueToInject != null) {
+                        invokeSetter(c, toReturnInstance, fieldName, fieldType, valueToInject);
+                    }
                 }
             }
             return toReturnInstance;
