@@ -12,10 +12,13 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Stack;
+import java.util.TreeSet;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -65,12 +68,13 @@ public class ParameterResolver {
 
         Map<String, String[]> values = request.getParameterMap();
         Stack<String> key = new Stack<>();
+        RequestParam definedName = param.getAnnotation(RequestParam.class);
+        String name = (definedName != null && !definedName.value().trim().isEmpty())
+                ? definedName.value()
+                : param.getName();
+        if (isScalarOrArray(param.getType()) || param.getType().isArray()
+                || collections.hasKeysUnder(values.keySet(), name)) {
 
-        if (isScalarOrArray(param.getType()) || param.getType().isArray()) {
-            RequestParam definedName = param.getAnnotation(RequestParam.class);
-            String name = (definedName != null && !definedName.value().trim().isEmpty())
-                    ? definedName.value()
-                    : param.getName();
             key.push(name);
         }
         return resolve(values, key, param.getParameterizedType(), request, response);
@@ -92,12 +96,12 @@ public class ParameterResolver {
             HttpServletRequest request, HttpServletResponse response) {
 
         Class<?> raw = rawClass(goal);
-        boolean isList = List.class.isAssignableFrom(raw);
+        boolean isCollection = Collection.class.isAssignableFrom(raw);
 
-        if (isList || raw.isArray()) {
-            Type elemType = isList ? listElementType(goal) : raw.componentType();
+        if (isCollection || raw.isArray()) {
+            Type elemType = isCollection ? listElementType(goal) : raw.componentType();
             if (!isScalarOrArray(rawClass(elemType))) {
-                List<Object> items = new ArrayList<>();
+                Collection<Object> items = raw.isArray() ? new ArrayList<>() : newCollection(raw);
                 String prefix = collections.buildKey(key);
                 for (int index : collections.countElements(values.keySet(), prefix)) {
                     key.push("[" + index + "]");
@@ -106,8 +110,9 @@ public class ParameterResolver {
                 }
                 if (raw.isArray()) {
                     Object array = Array.newInstance(raw.componentType(), items.size());
-                    for (int i = 0; i < items.size(); i++)
-                        Array.set(array, i, items.get(i));
+                    int i = 0;
+                    for (Object item : items)
+                        Array.set(array, i++, item);
                     return array;
                 }
                 return items;
@@ -120,10 +125,10 @@ public class ParameterResolver {
                     || (vals.length == 1 && vals[0].trim().isEmpty() && raw != String.class)) {
                 if (raw.isArray())
                     return Array.newInstance(raw.componentType(), 0);
-                if (isList)
-                    return new ArrayList<>();
                 if (raw.isPrimitive())
                     return getDefaultValue(raw);
+                if (Collection.class.isAssignableFrom(raw))
+                    return newCollection(raw);
                 return null;
             }
             return parseParameter(vals, goal);
@@ -134,6 +139,18 @@ public class ParameterResolver {
         }
 
         return resolveObject(values, raw, key, request, response);
+    }
+
+    private Collection<Object> newCollection(Class<?> raw) {
+        if (raw.isAssignableFrom(ArrayList.class))
+            return new ArrayList<>();
+        if (raw.isAssignableFrom(LinkedHashSet.class))
+            return new LinkedHashSet<>();
+        if (raw.isAssignableFrom(TreeSet.class))
+            return new TreeSet<>();
+        if (raw.isAssignableFrom(LinkedList.class))
+            return new LinkedList<>();
+        throw new IllegalArgumentException("We don't support your collection type , change yours : " + raw.getName());
     }
 
     private Object resolveObject(Map<String, String[]> responses, Class<?> toReturn, Stack<String> key,
@@ -186,7 +203,7 @@ public class ParameterResolver {
 
     private Object parseParameter(String[] values, Type targetType) {
         if (targetType instanceof ParameterizedType paramType
-                && List.class.isAssignableFrom((Class<?>) paramType.getRawType())) {
+                && Collection.class.isAssignableFrom((Class<?>) paramType.getRawType())) {
 
             Type rawGenericType = paramType.getActualTypeArguments()[0];
             Class<?> genericClass = (rawGenericType instanceof Class<?>)
@@ -197,21 +214,21 @@ public class ParameterResolver {
                     ? values[0].split("\\s*,\\s*")
                     : values;
 
-            List<Object> list = new ArrayList<>();
+            Collection<Object> collection = newCollection((Class<?>) paramType.getRawType());
             for (String val : effectiveValues) {
-                list.add(parseParameter(val, genericClass));
+                collection.add(parseParameter(val, genericClass));
             }
-            return list;
-        } else if (targetType instanceof Class<?> rawClass && List.class.isAssignableFrom(rawClass)) {
+            return collection;
+        } else if (targetType instanceof Class<?> rawClass && Collection.class.isAssignableFrom(rawClass)) {
             String[] effectiveValues = (values.length == 1 && values[0].contains(","))
                     ? values[0].split("\\s*,\\s*")
                     : values;
 
-            List<Object> list = new ArrayList<>();
+            Collection<Object> collection = newCollection(rawClass);
             for (String val : effectiveValues) {
-                list.add(parseParameter(val, String.class));
+                collection.add(parseParameter(val, String.class));
             }
-            return list;
+            return collection;
         }
 
         if (targetType instanceof Class<?> goal && goal.isArray()) {
@@ -255,7 +272,7 @@ public class ParameterResolver {
     }
 
     private boolean isScalarOrArray(Class<?> type) {
-        if (List.class.isAssignableFrom(type)) {
+        if (Collection.class.isAssignableFrom(type)) {
             return true;
         }
         Class<?> componentType = type.isArray() ? type.componentType() : type;

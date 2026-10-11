@@ -9,7 +9,7 @@ public class CollectionProcessing {
     public String buildKey(Stack<String> keyStack) {
         StringBuilder sb = new StringBuilder();
         for (String token : keyStack) {
-            if (!token.startsWith("[") && sb.length() > 0) {
+            if (!token.startsWith("[") && !sb.isEmpty()) {
                 sb.append(".");
             }
             sb.append(token);

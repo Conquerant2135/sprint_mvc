@@ -25,7 +25,7 @@ C'est le format du fichier
   	<!--
 		Ces 2 parametres suivant sont optionnels
   		Sauf si l'application client veut utiliser spring 
-  	
+  
   		Indication a spring de la classe de configuration principale si on 
   		utilise spring dans la partie client
   	-->
@@ -103,8 +103,6 @@ C'est le format du fichier
 
 </web-app>
 ```
-
-    
 
 ## Livrable
 
