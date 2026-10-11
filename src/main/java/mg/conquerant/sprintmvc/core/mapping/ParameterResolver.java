@@ -12,8 +12,11 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.Stack;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -25,6 +28,16 @@ import mg.conquerant.sprintmvc.utils.JsonConverter;
 public class ParameterResolver {
 
     public JsonConverter converter;
+    private final CollectionProcessing collections = new CollectionProcessing();
+
+    private Object resolveJsonObject(Parameter param, HttpServletRequest request) {
+        try {
+            return converter.toObject(request.getInputStream(), param.getParameterizedType());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 
     public Object[] getMethodArgs(Method method, HttpServletRequest request, HttpServletResponse response) {
         Parameter[] parameters = method.getParameters();
@@ -38,6 +51,7 @@ public class ParameterResolver {
     }
 
     private Object resolveParameter(Parameter param, HttpServletRequest request, HttpServletResponse response) {
+
         if (HttpServletRequest.class.isAssignableFrom(param.getType())) {
             return request;
         } else if (HttpServletResponse.class.isAssignableFrom(param.getType())) {
@@ -50,44 +64,82 @@ public class ParameterResolver {
             return resolveJsonObject(param, request);
         }
 
-        if (isScalarOrArray(param.getType())) {
+        Map<String, String[]> values = request.getParameterMap();
+        Stack<String> key = new Stack<>();
 
+        if (isScalarOrArray(param.getType()) || param.getType().isArray()) {
             RequestParam definedName = param.getAnnotation(RequestParam.class);
             String name = (definedName != null && !definedName.value().trim().isEmpty())
                     ? definedName.value()
                     : param.getName();
+            key.push(name);
+        }
+        return resolve(values, key, param.getParameterizedType(), request, response);
+    }
 
-            String[] values = request.getParameterValues(name);
+    private Class<?> rawClass(Type t) {
+        if (t instanceof ParameterizedType pt)
+            return (Class<?>) pt.getRawType();
+        return (Class<?>) t;
+    }
 
-            if (values == null || values.length == 0
-                    || (values.length == 1 && values[0].trim().isEmpty() && param.getType() != String.class)) {
-                if (param.getType().isArray()) {
-                    return Array.newInstance(param.getType().componentType(), 0);
+    private Type listElementType(Type t) {
+        if (t instanceof ParameterizedType pt)
+            return pt.getActualTypeArguments()[0];
+        return String.class;
+    }
+
+    private Object resolve(Map<String, String[]> values, Stack<String> key, Type goal,
+            HttpServletRequest request, HttpServletResponse response) {
+
+        Class<?> raw = rawClass(goal);
+        boolean isList = List.class.isAssignableFrom(raw);
+
+        if (isList || raw.isArray()) {
+            Type elemType = isList ? listElementType(goal) : raw.componentType();
+            if (!isScalarOrArray(rawClass(elemType))) {
+                List<Object> items = new ArrayList<>();
+                String prefix = collections.buildKey(key);
+                for (int index : collections.countElements(values.keySet(), prefix)) {
+                    key.push("[" + index + "]");
+                    items.add(resolve(values, key, elemType, request, response));
+                    key.pop();
                 }
-                if (List.class.isAssignableFrom(param.getType())) {
+                if (raw.isArray()) {
+                    Object array = Array.newInstance(raw.componentType(), items.size());
+                    for (int i = 0; i < items.size(); i++)
+                        Array.set(array, i, items.get(i));
+                    return array;
+                }
+                return items;
+            }
+        }
+
+        if (isScalarOrArray(raw)) {
+            String[] vals = values.get(collections.buildKey(key));
+            if (vals == null || vals.length == 0
+                    || (vals.length == 1 && vals[0].trim().isEmpty() && raw != String.class)) {
+                if (raw.isArray())
+                    return Array.newInstance(raw.componentType(), 0);
+                if (isList)
                     return new ArrayList<>();
-                }
-                if (param.getType().isPrimitive()) {
-                    return getDefaultValue(param.getType());
-                }
+                if (raw.isPrimitive())
+                    return getDefaultValue(raw);
                 return null;
             }
-
-            return parseParameter(values, param.getParameterizedType());
+            return parseParameter(vals, goal);
         }
-        return resolveObject(param.getType(), request, response);
-    }
 
-    private Object resolveJsonObject(Parameter param, HttpServletRequest request) {
-        try {
-            return converter.toObject(request.getInputStream(), param.getParameterizedType());
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (!key.isEmpty() && !collections.hasKeysUnder(values.keySet(), collections.buildKey(key))) {
             return null;
         }
+
+        return resolveObject(values, raw, key, request, response);
     }
 
-    private Object resolveObject(Class<?> toReturn, HttpServletRequest request, HttpServletResponse response) {
+    private Object resolveObject(Map<String, String[]> responses, Class<?> toReturn, Stack<String> key,
+            HttpServletRequest request,
+            HttpServletResponse response) {
         try {
             Object toReturnInstance = toReturn.getDeclaredConstructor().newInstance();
             for (Field field : toReturn.getDeclaredFields()) {
@@ -101,12 +153,9 @@ public class ParameterResolver {
                 } else if (HttpSession.class.isAssignableFrom(fieldType)) {
                     valueToInject = request.getSession();
                 } else {
-                    String[] values = request.getParameterValues(fieldName);
-                    if (values != null && values.length > 0 && !(values.length == 1 && values[0].trim().isEmpty())) {
-                        valueToInject = parseParameter(values, field.getGenericType());
-                    } else if (fieldType.isPrimitive()) {
-                        valueToInject = getDefaultValue(fieldType);
-                    }
+                    key.push(fieldName);
+                    valueToInject = resolve(responses, key, field.getGenericType(), request, response); // <-- corrigé
+                    key.pop();
                 }
                 if (valueToInject != null) {
                     invokeSetter(toReturn, toReturnInstance, fieldName, fieldType, valueToInject);
