@@ -65,9 +65,8 @@ public class InitializerContextListener implements ServletContextListener {
             appContainer = new DefaultApplicationContainer();
         }
 
-        JsonConverter converter = new JsonConverter();
+        JsonConverter converter = (JsonConverter) appContainer.getBean(JsonConverter.class);
         
-
         appContext.setAttribute("converter", converter);
         appContext.setAttribute("routesMapping", routesMapping);
         appContext.setAttribute("viewResolver", viewResolver);
