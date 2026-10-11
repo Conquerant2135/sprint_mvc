@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Map;
 
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -14,6 +15,7 @@ import mg.conquerant.sprintmvc.core.web.view.ModelAndView;
 import mg.conquerant.sprintmvc.core.web.view.ViewResolver;
 import mg.conquerant.sprintmvc.utils.JsonConverter;
 
+@MultipartConfig
 public class FrontControllerServlet extends HttpServlet {
 
     private transient Map<UrlInfo, MethodMapping> routesMapping;
