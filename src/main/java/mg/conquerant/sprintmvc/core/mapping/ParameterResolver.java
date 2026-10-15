@@ -1,5 +1,6 @@
 package mg.conquerant.sprintmvc.core.mapping;
 
+import java.io.InputStream;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -24,6 +25,7 @@ import java.util.TreeSet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.Part;
 import mg.conquerant.sprintmvc.core.annotation.RequestBody;
 import mg.conquerant.sprintmvc.core.annotation.RequestParam;
 import mg.conquerant.sprintmvc.utils.JsonConverter;
@@ -61,7 +63,7 @@ public class ParameterResolver {
             return response;
         } else if (HttpSession.class.isAssignableFrom(param.getType())) {
             return request.getSession();
-        }
+        } 
 
         if (param.isAnnotationPresent(RequestBody.class)) {
             return resolveJsonObject(param, request);
@@ -73,12 +75,36 @@ public class ParameterResolver {
         String name = (definedName != null && !definedName.value().trim().isEmpty())
                 ? definedName.value()
                 : param.getName();
+
+        if (param.getType() == FileContainer.class) {
+            try {
+                return manageFile(request.getPart(name), request);               
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
         if (isScalarOrArray(param.getType()) || param.getType().isArray()
                 || collections.hasKeysUnder(values.keySet(), name)) {
 
             key.push(name);
         }
         return resolve(values, key, param.getParameterizedType(), request, response);
+    }
+
+    private FileContainer manageFile(Part filepart , HttpServletRequest request){
+        FileContainer fileContainer = new FileContainer();
+
+        fileContainer.setFilename(filepart.getSubmittedFileName());
+        fileContainer.setMimeType(filepart.getContentType());
+
+        try(InputStream data = filepart.getInputStream()) {
+            fileContainer.setData(data.readAllBytes());        
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return fileContainer;
     }
 
     private Class<?> rawClass(Type t) {
