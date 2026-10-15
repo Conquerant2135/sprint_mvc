@@ -18,6 +18,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 import java.util.TreeSet;
@@ -63,7 +64,7 @@ public class ParameterResolver {
             return response;
         } else if (HttpSession.class.isAssignableFrom(param.getType())) {
             return request.getSession();
-        } 
+        }
 
         if (param.isAnnotationPresent(RequestBody.class)) {
             return resolveJsonObject(param, request);
@@ -78,7 +79,7 @@ public class ParameterResolver {
 
         if (param.getType() == FileContainer.class) {
             try {
-                return manageFile(request.getPart(name), request);               
+                return manageFile(request.getPart(name));
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -92,14 +93,14 @@ public class ParameterResolver {
         return resolve(values, key, param.getParameterizedType(), request, response);
     }
 
-    private FileContainer manageFile(Part filepart , HttpServletRequest request){
+    private FileContainer manageFile(Part filepart) {
         FileContainer fileContainer = new FileContainer();
 
         fileContainer.setFilename(filepart.getSubmittedFileName());
         fileContainer.setMimeType(filepart.getContentType());
 
-        try(InputStream data = filepart.getInputStream()) {
-            fileContainer.setData(data.readAllBytes());        
+        try (InputStream data = filepart.getInputStream()) {
+            fileContainer.setData(data.readAllBytes());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -127,14 +128,31 @@ public class ParameterResolver {
 
         if (isCollection || raw.isArray()) {
             Type elemType = isCollection ? listElementType(goal) : raw.componentType();
+
             if (!isScalarOrArray(rawClass(elemType))) {
                 Collection<Object> items = raw.isArray() ? new ArrayList<>() : newCollection(raw);
+
+                if (rawClass(elemType) == FileContainer.class) {
+                    try {
+                        CollectionProcessing cp = new CollectionProcessing();
+                        for (Part part : request.getParts()) {
+                            if (part.getName().equals(cp.buildKey(key)) && part.getSize() > 0) {
+                                items.add(manageFile(part));
+                            }
+                        }
+                        return items;
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+
                 String prefix = collections.buildKey(key);
                 for (int index : collections.countElements(values.keySet(), prefix)) {
                     key.push("[" + index + "]");
                     items.add(resolve(values, key, elemType, request, response));
                     key.pop();
                 }
+
                 if (raw.isArray()) {
                     Object array = Array.newInstance(raw.componentType(), items.size());
                     int i = 0;
