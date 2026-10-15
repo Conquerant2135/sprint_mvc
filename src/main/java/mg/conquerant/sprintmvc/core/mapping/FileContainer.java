@@ -4,13 +4,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
 
+import mg.conquerant.sprintmvc.core.config.Config;
+
 public class FileContainer {
 
     private String filename;
     private String mimeType;
     private String targetDirectory = "";
-    private static final String uploadDirectory = "uploads";
+    private final String uploadDirectory = Config.getProperty("upload.dir");
     private byte[] data;
+
 
     private void generateName() {
         if (filename == null || filename.isEmpty()) {
@@ -84,5 +87,4 @@ public class FileContainer {
     public void setData(byte[] data) {
         this.data = data;
     }
-
 }
