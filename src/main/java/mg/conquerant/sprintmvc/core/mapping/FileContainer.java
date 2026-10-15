@@ -14,7 +14,7 @@ public class FileContainer {
 
     private void generateName() {
         if (filename == null || filename.isEmpty()) {
-            filename = "file";
+            filename = "filename_placeholder";
         }
 
         String extension = "";
