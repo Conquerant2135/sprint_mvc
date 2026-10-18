@@ -1,5 +1,6 @@
 package mg.conquerant.sprintmvc.core.mapping;
 
+import java.io.InputStream;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -17,6 +18,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 import java.util.TreeSet;
@@ -24,6 +26,7 @@ import java.util.TreeSet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.Part;
 import mg.conquerant.sprintmvc.core.annotation.RequestBody;
 import mg.conquerant.sprintmvc.core.annotation.RequestParam;
 import mg.conquerant.sprintmvc.utils.JsonConverter;
@@ -73,12 +76,36 @@ public class ParameterResolver {
         String name = (definedName != null && !definedName.value().trim().isEmpty())
                 ? definedName.value()
                 : param.getName();
+
+        if (param.getType() == FileContainer.class) {
+            try {
+                return manageFile(request.getPart(name));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
         if (isScalarOrArray(param.getType()) || param.getType().isArray()
                 || collections.hasKeysUnder(values.keySet(), name)) {
 
             key.push(name);
         }
         return resolve(values, key, param.getParameterizedType(), request, response);
+    }
+
+    private FileContainer manageFile(Part filepart) {
+        FileContainer fileContainer = new FileContainer();
+
+        fileContainer.setFilename(filepart.getSubmittedFileName());
+        fileContainer.setMimeType(filepart.getContentType());
+
+        try (InputStream data = filepart.getInputStream()) {
+            fileContainer.setData(data.readAllBytes());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return fileContainer;
     }
 
     private Class<?> rawClass(Type t) {
@@ -101,14 +128,31 @@ public class ParameterResolver {
 
         if (isCollection || raw.isArray()) {
             Type elemType = isCollection ? listElementType(goal) : raw.componentType();
+
             if (!isScalarOrArray(rawClass(elemType))) {
                 Collection<Object> items = raw.isArray() ? new ArrayList<>() : newCollection(raw);
+
+                if (rawClass(elemType) == FileContainer.class) {
+                    try {
+                        CollectionProcessing cp = new CollectionProcessing();
+                        for (Part part : request.getParts()) {
+                            if (part.getName().equals(cp.buildKey(key)) && part.getSize() > 0) {
+                                items.add(manageFile(part));
+                            }
+                        }
+                        return items;
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+
                 String prefix = collections.buildKey(key);
                 for (int index : collections.countElements(values.keySet(), prefix)) {
                     key.push("[" + index + "]");
                     items.add(resolve(values, key, elemType, request, response));
                     key.pop();
                 }
+
                 if (raw.isArray()) {
                     Object array = Array.newInstance(raw.componentType(), items.size());
                     int i = 0;
