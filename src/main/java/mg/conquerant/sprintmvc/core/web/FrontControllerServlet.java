@@ -2,10 +2,13 @@ package mg.conquerant.sprintmvc.core.web;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.List;
+import java.util.Collections;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import mg.conquerant.sprintmvc.core.context.ApplicationContainer;
@@ -14,6 +17,7 @@ import mg.conquerant.sprintmvc.core.mapping.UrlInfo;
 import mg.conquerant.sprintmvc.core.web.view.ModelAndView;
 import mg.conquerant.sprintmvc.core.web.view.ViewResolver;
 import mg.conquerant.sprintmvc.utils.JsonConverter;
+import mg.conquerant.sprintmvc.core.mapping.Session;
 
 @MultipartConfig
 public class FrontControllerServlet extends HttpServlet {
@@ -44,6 +48,28 @@ public class FrontControllerServlet extends HttpServlet {
         converter = (JsonConverter) getServletContext().getAttribute("converter");
     }
 
+    private void sync(HttpSession session) {
+        try {
+            Session source = (Session) session.getAttribute("sprintmvc.session");
+            if(source == null) return;
+
+            List<String> attributeNames = Collections.list(session.getAttributeNames());
+
+            for(String attribute : attributeNames){
+                if(!source.getAttributes().containsKey(attribute)){
+                    session.removeAttribute(attribute);
+                }
+            }
+
+            source.getAttributes().forEach((key , value) -> {
+                System.out.println(key);
+                session.setAttribute(key,value);
+            });
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
     protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String contextPath = request.getContextPath();
         String targetResource = request.getRequestURI().substring(contextPath.length());
@@ -57,7 +83,7 @@ public class FrontControllerServlet extends HttpServlet {
 
                 Object res = routesMapping.get(urlInfo).execute(beanContainer, request, response);
                 MethodMapping toTest = routesMapping.get(urlInfo);
-
+                sync(request.getSession());
                 if (res instanceof ModelAndView mv) {
                     viewResolver.render(mv, request, response);
                 } else if (toTest.isJson()) {
