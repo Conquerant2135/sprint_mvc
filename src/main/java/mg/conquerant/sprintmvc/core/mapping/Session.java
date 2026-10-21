@@ -1,7 +1,10 @@
 package mg.conquerant.sprintmvc.core.mapping;
 
 import java.util.Map;
+import java.util.HashMap;
+import java.util.Enumeration;
 import java.util.concurrent.ConcurrentHashMap;
+import jakarta.servlet.http.HttpSession;
 
 public class Session {
 
@@ -10,6 +13,18 @@ public class Session {
     private final long lastAccessedTime;
     private final Map<String, Object> attributes = new ConcurrentHashMap<>();
     
+    public static Session buildSessionInstance(HttpSession session)
+    {
+        Map<String,Object> attributes = new HashMap<>();
+        Enumeration<String> attributesNames = session.getAttributeNames();
+        while(attributesNames.hasMoreElements()){
+            String attributeName = attributesNames.nextElement();
+            Object toPut = session.getAttribute(attributeName);
+            attributes.put(attributeName,toPut);
+        }
+        return new Session(session.getId() , session.getCreationTime() , session.getLastAccessedTime() , attributes);
+    }
+
     public Session(String sessionId, long creationTime, long lastAccessedTime,
             Map<String, Object> initialAttributes) {
         this.sessionId = sessionId;
@@ -32,6 +47,7 @@ public class Session {
 
     public Map<String, Object> getAttributes() {
         return attributes;
+    }
     
     public String getSessionId() {
         return sessionId;
