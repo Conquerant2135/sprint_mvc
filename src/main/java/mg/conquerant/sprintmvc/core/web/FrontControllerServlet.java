@@ -26,6 +26,7 @@ public class FrontControllerServlet extends HttpServlet {
     private transient ViewResolver viewResolver;
     private transient ApplicationContainer beanContainer;
     private transient JsonConverter converter;
+    private transient String sessionVerification;
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -46,6 +47,7 @@ public class FrontControllerServlet extends HttpServlet {
         viewResolver = (ViewResolver) getServletContext().getAttribute("viewResolver");
         beanContainer = (ApplicationContainer) getServletContext().getAttribute("beanContainer");
         converter = (JsonConverter) getServletContext().getAttribute("converter");
+        sessionVerification = getServletContext().getAttribute("sessionVerification");
     }
 
     private void sync(HttpSession session) {
@@ -81,8 +83,22 @@ public class FrontControllerServlet extends HttpServlet {
 
             if (routesMapping.containsKey(urlInfo)) {
 
-                Object res = routesMapping.get(urlInfo).execute(beanContainer, request, response);
+
                 MethodMapping toTest = routesMapping.get(urlInfo);
+
+                if(toTest.isAuthNeeded()){
+                    HttpSession session = request.getSession();
+                    Session source = (Session) session.getAttribute("sprintmvc.session");
+                    if (source == null) {
+                        throw new RuntimeException("User must be logged to access the ressource");
+                    }
+
+                    if(source.getAttribute(sessionVerification) == null) {
+                        throw new RuntimeException("User must be logged to access the ressource");
+                    }
+                }
+
+                Object res = toTest.execute(beanContainer, request, response);
                 sync(request.getSession());
                 if (res instanceof ModelAndView mv) {
                     viewResolver.render(mv, request, response);
