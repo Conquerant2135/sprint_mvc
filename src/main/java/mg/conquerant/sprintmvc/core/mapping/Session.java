@@ -20,8 +20,10 @@ public class Session {
         while(attributesNames.hasMoreElements()){
             String attributeName = attributesNames.nextElement();
             Object toPut = session.getAttribute(attributeName);
+            System.out.println("INITIALIZATION - Manisy : " + attributeName + " de tsy mitapy");
             attributes.put(attributeName,toPut);
         }
+        System.out.println("INITIALIZATION - Initalise ve ilay raha");
         return new Session(session.getId() , session.getCreationTime() , session.getLastAccessedTime() , attributes);
     }
 
@@ -39,6 +41,7 @@ public class Session {
 
     public void setAttribute(String name, Object value) {
         attributes.put(name, value);
+        System.out.println("SET VALUE - Manisy : " + name+ " de tsy mitapy");
     }
 
     public void removeAttribute(String name) {
@@ -48,7 +51,7 @@ public class Session {
     public Map<String, Object> getAttributes() {
         return attributes;
     }
-    
+
     public String getSessionId() {
         return sessionId;
     }

@@ -30,6 +30,7 @@ import jakarta.servlet.http.Part;
 import mg.conquerant.sprintmvc.core.annotation.RequestBody;
 import mg.conquerant.sprintmvc.core.annotation.RequestParam;
 import mg.conquerant.sprintmvc.utils.JsonConverter;
+import mg.conquerant.sprintmvc.core.mapping.Session;
 
 public class ParameterResolver {
 
@@ -64,6 +65,15 @@ public class ParameterResolver {
             return response;
         } else if (HttpSession.class.isAssignableFrom(param.getType())) {
             return request.getSession();
+        } else if (Session.class.isAssignableFrom(param.getType())) {
+            HttpSession session = request.getSession();
+            Session source = (Session) session.getAttribute("sprintmvc.session");
+            if (source == null) {
+                source = Session.buildSessionInstance(request.getSession());
+                session.setAttribute("sprintmvc.session" , source);
+                return source;
+            }
+            return source;
         }
 
         if (param.isAnnotationPresent(RequestBody.class)) {
