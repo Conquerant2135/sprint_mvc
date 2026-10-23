@@ -47,19 +47,24 @@ public class FrontControllerServlet extends HttpServlet {
         viewResolver = (ViewResolver) getServletContext().getAttribute("viewResolver");
         beanContainer = (ApplicationContainer) getServletContext().getAttribute("beanContainer");
         converter = (JsonConverter) getServletContext().getAttribute("converter");
-        sessionVerification = getServletContext().getAttribute("sessionVerification");
+        sessionVerification = (String) getServletContext().getAttribute("sessionVerification");
     }
 
     private void sync(HttpSession session) {
         try {
             Session source = (Session) session.getAttribute("sprintmvc.session");
+
+            System.out.println("READING THE SESSION VARIABLE");
             if(source == null) return;
 
             List<String> attributeNames = Collections.list(session.getAttributeNames());
 
+            System.out.println("SYNC STATE");
+
             for(String attribute : attributeNames){
                 if(!source.getAttributes().containsKey(attribute)){
-                    session.removeAttribute(attribute);
+                    if(attribute != "sprintmvc.session")
+                        session.removeAttribute(attribute);
                 }
             }
 
@@ -86,15 +91,33 @@ public class FrontControllerServlet extends HttpServlet {
 
                 MethodMapping toTest = routesMapping.get(urlInfo);
 
+
                 if(toTest.isAuthNeeded()){
                     HttpSession session = request.getSession();
                     Session source = (Session) session.getAttribute("sprintmvc.session");
-                    if (source == null) {
-                        throw new RuntimeException("User must be logged to access the ressource");
+                    Session rawSession = (Session) session.getAttribute("sprintmvc.session");
+                    System.out.println("--- DEBUG SESSION ---");
+                    System.out.println("Objet brut en session : " + rawSession);
+                    if (rawSession != null) {
+                        System.out.println("Classe de l'objet : " + rawSession.getClass().getName());
+                        System.out.println("ClassLoader de l'objet : " + rawSession.getClass().getClassLoader());
+                        System.out.println("ClassLoader du Servlet : " + this.getClass().getClassLoader());
                     }
-
-                    if(source.getAttribute(sessionVerification) == null) {
-                        throw new RuntimeException("User must be logged to access the ressource");
+                    if (session.getAttribute("sprintmvc.session") == null || request.getSession().getAttribute(sessionVerification) == null) {
+                        System.out.println(request.getSession().getAttribute(sessionVerification));
+                        System.out.println(request.getSession().getAttribute("sprintmvc.session"));
+                        System.out.println(session.getId());
+                        response.setContentType("application/json");
+                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                        response.setCharacterEncoding("UTF-8");
+                        response.getOutputStream().print(
+                            """
+                            { 
+                                "message" : "You must be logged in to access this resource",
+                                "error" : "Error 401"  
+                            }
+                            """);
+                        throw new RuntimeException("User must be logged to access the resource");
                     }
                 }
 

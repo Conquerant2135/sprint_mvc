@@ -72,5 +72,6 @@ public class InitializerContextListener implements ServletContextListener {
         appContext.setAttribute("viewResolver", viewResolver);
         appContext.setAttribute("beanContainer", appContainer);
         appContext.setAttribute("sessionVerification", appContext.getInitParameter("sessionVerification"));
+        System.out.println( appContext.getInitParameter("sessionVerification"));
     }
 }

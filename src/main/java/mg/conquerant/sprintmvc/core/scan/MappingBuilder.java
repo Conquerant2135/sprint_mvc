@@ -45,6 +45,7 @@ public class MappingBuilder {
         methodMap.setUrlInfo(urlInfo);
         methodMap.setActionMethod(method);
         methodMap.setJson(isJson);
+        methodMap.setAuthNeeded(authNeeded);
         return methodMap;
     }
 }
