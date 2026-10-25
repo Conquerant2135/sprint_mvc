@@ -10,6 +10,7 @@ import mg.conquerant.sprintmvc.core.exception.UrlRepetitionException;
 import mg.conquerant.sprintmvc.core.mapping.MethodMapping;
 import mg.conquerant.sprintmvc.core.mapping.UrlInfo;
 import mg.conquerant.sprintmvc.core.annotation.ResponseBody;
+import mg.conquerant.sprintmvc.core.annotation.Auth;
 
 public class MappingBuilder {
 
@@ -29,20 +30,22 @@ public class MappingBuilder {
                     if (routesMapping.containsKey(test)) {
                         throw new UrlRepetitionException(toAnalyze, test);
                     }
+
                     routesMapping.put(test, buildMapping(toAnalyze, controller, test,
-                            toAnalyze.isAnnotationPresent(ResponseBody.class)));
+                            toAnalyze.isAnnotationPresent(ResponseBody.class) , toAnalyze.isAnnotationPresent(Auth.class)));
                 }
             }
         }
     }
 
     private static MethodMapping buildMapping(Method method, Class<?> controller, UrlInfo urlInfo,
-            boolean isJson) {
+            boolean isJson , boolean authNeeded) {
         MethodMapping methodMap = new MethodMapping();
         methodMap.setControllerClass(controller);
         methodMap.setUrlInfo(urlInfo);
         methodMap.setActionMethod(method);
         methodMap.setJson(isJson);
+        methodMap.setAuthNeeded(authNeeded);
         return methodMap;
     }
 }

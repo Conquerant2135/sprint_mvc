@@ -15,6 +15,7 @@ public class MethodMapping {
     private Method actionMethod;
     private UrlInfo urlInfo;
     private boolean json;
+    private boolean authNeeded;
 
     public Object execute(ApplicationContainer beanContainer, HttpServletRequest request, HttpServletResponse response)
             throws IllegalArgumentException {
@@ -27,6 +28,14 @@ public class MethodMapping {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public boolean isAuthNeeded(){
+        return authNeeded;
+    }
+
+    public void setAuthNeeded(boolean authNeeded){
+        this.authNeeded = authNeeded;
     }
 
     public Class<?> getControllerClass() {
