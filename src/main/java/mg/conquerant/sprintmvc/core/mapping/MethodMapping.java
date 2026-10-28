@@ -40,7 +40,6 @@ public class MethodMapping {
         return false;
     }
 
-
     public void setRoles(String[] roles){
         this.roles = roles;
     }
