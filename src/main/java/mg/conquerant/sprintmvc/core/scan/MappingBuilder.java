@@ -11,6 +11,7 @@ import mg.conquerant.sprintmvc.core.mapping.MethodMapping;
 import mg.conquerant.sprintmvc.core.mapping.UrlInfo;
 import mg.conquerant.sprintmvc.core.annotation.ResponseBody;
 import mg.conquerant.sprintmvc.core.annotation.Auth;
+import mg.conquerant.sprintmvc.core.annotation.RolePermitted;
 
 public class MappingBuilder {
 
@@ -46,6 +47,12 @@ public class MappingBuilder {
         methodMap.setActionMethod(method);
         methodMap.setJson(isJson);
         methodMap.setAuthNeeded(authNeeded);
+
+        if(method.isAnnotationPresent(RolePermitted.class)) {
+            methodMap.setRestricted(true);
+            methodMap.setRoles(method.getAnnotation(RolePermitted.class).value());
+        }
+
         return methodMap;
     }
 }

@@ -15,7 +15,9 @@ public class MethodMapping {
     private Method actionMethod;
     private UrlInfo urlInfo;
     private boolean json;
-    private boolean authNeeded;
+    private boolean authNeeded = false;
+    private boolean restricted = false;
+    private String[] roles;
 
     public Object execute(ApplicationContainer beanContainer, HttpServletRequest request, HttpServletResponse response)
             throws IllegalArgumentException {
@@ -28,6 +30,29 @@ public class MethodMapping {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public boolean isPermitted(String toVerify){
+        for(String role : roles){
+            if(toVerify.equals(role))
+                return true;
+        }
+        return false;
+    }
+
+
+    public void setRoles(String[] roles){
+        this.roles = roles;
+    }
+
+    public boolean isRestricted(){
+        return restricted;
+    }
+
+    public void setRestricted(boolean restricted){
+        if(restricted)
+            this.authNeeded = true;
+        this.restricted = restricted;
     }
 
     public boolean isAuthNeeded(){
