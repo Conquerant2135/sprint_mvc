@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.List;
 import java.util.Collections;
-
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.http.HttpServlet;
@@ -18,6 +17,7 @@ import mg.conquerant.sprintmvc.core.web.view.ModelAndView;
 import mg.conquerant.sprintmvc.core.web.view.ViewResolver;
 import mg.conquerant.sprintmvc.utils.JsonConverter;
 import mg.conquerant.sprintmvc.core.mapping.Session;
+import mg.conquerant.sprintmvc.core.security.User;
 
 @MultipartConfig
 public class FrontControllerServlet extends HttpServlet {
@@ -27,6 +27,7 @@ public class FrontControllerServlet extends HttpServlet {
     private transient ApplicationContainer beanContainer;
     private transient JsonConverter converter;
     private transient String sessionVerification;
+    private transient String profileKey;
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -48,6 +49,7 @@ public class FrontControllerServlet extends HttpServlet {
         beanContainer = (ApplicationContainer) getServletContext().getAttribute("beanContainer");
         converter = (JsonConverter) getServletContext().getAttribute("converter");
         sessionVerification = (String) getServletContext().getAttribute("sessionVerification");
+        profileKey = (String) getServletContext().getAttribute("profileKey");
     }
 
     private void sync(HttpSession session) {
@@ -104,9 +106,9 @@ public class FrontControllerServlet extends HttpServlet {
                         System.out.println("ClassLoader du Servlet : " + this.getClass().getClassLoader());
                     }
                     if (session.getAttribute("sprintmvc.session") == null || request.getSession().getAttribute(sessionVerification) == null) {
-                        System.out.println(request.getSession().getAttribute(sessionVerification));
-                        System.out.println(request.getSession().getAttribute("sprintmvc.session"));
-                        System.out.println(session.getId());
+                        // System.out.println(request.getSession().getAttribute(sessionVerification));
+                        // System.out.println(request.getSession().getAttribute("sprintmvc.session"));
+                        // System.out.println(session.getId());
                         response.setContentType("application/json");
                         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                         response.setCharacterEncoding("UTF-8");
@@ -118,6 +120,24 @@ public class FrontControllerServlet extends HttpServlet {
                             }
                             """);
                         throw new RuntimeException("User must be logged to access the resource");
+                    }
+                }
+
+                if(toTest.isRestricted()){
+                    User toView = (User) request.getSession().getAttribute(profileKey);
+                    if(toView == null || !toTest.isPermitted(toView.getRole())){
+                        System.out.println(toView.getRole());
+                        response.setContentType("application/json");
+                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                        response.setCharacterEncoding("UTF-8");
+                        response.getOutputStream().print(
+                            """
+                            { 
+                                "message" : "Role not authorized",
+                                "error" : "Error 403"  
+                            }
+                            """);
+                        throw new RuntimeException("Role not authorized");
                     }
                 }
 
