@@ -1,27 +1,21 @@
 package mg.conquerant.sprintmvc.core.mapping;
 
-import java.io.InputStream;
+import static mg.conquerant.sprintmvc.utils.TypeUtils.getDefaultValue;
+import static mg.conquerant.sprintmvc.utils.TypeUtils.isScalarOrArray;
+import static mg.conquerant.sprintmvc.utils.TypeUtils.listElementType;
+import static mg.conquerant.sprintmvc.utils.TypeUtils.newCollection;
+import static mg.conquerant.sprintmvc.utils.TypeUtils.rawClass;
+
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Stack;
-import java.util.TreeSet;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -29,13 +23,15 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.Part;
 import mg.conquerant.sprintmvc.core.annotation.RequestBody;
 import mg.conquerant.sprintmvc.core.annotation.RequestParam;
+import mg.conquerant.sprintmvc.core.config.Config;
+import mg.conquerant.sprintmvc.core.web.Session;
 import mg.conquerant.sprintmvc.utils.JsonConverter;
-import mg.conquerant.sprintmvc.core.mapping.Session;
 
 public class ParameterResolver {
 
     public JsonConverter converter;
     private final CollectionProcessing collections = new CollectionProcessing();
+    private final String sessionAttribute = Config.getProperty("sprintmvc.session");
 
     private Object resolveJsonObject(Parameter param, HttpServletRequest request) {
         try {
@@ -67,10 +63,10 @@ public class ParameterResolver {
             return request.getSession();
         } else if (Session.class.isAssignableFrom(param.getType())) {
             HttpSession session = request.getSession();
-            Session source = (Session) session.getAttribute("sprintmvc.session");
+            Session source = (Session) session.getAttribute(sessionAttribute);
             if (source == null) {
                 source = Session.buildSessionInstance(request.getSession());
-                session.setAttribute("sprintmvc.session" , source);
+                session.setAttribute(sessionAttribute, source);
                 return source;
             }
             return source;
@@ -89,7 +85,7 @@ public class ParameterResolver {
 
         if (param.getType() == FileContainer.class) {
             try {
-                return manageFile(request.getPart(name));
+                return FileParts.toContainer(request.getPart(name));
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -101,33 +97,6 @@ public class ParameterResolver {
             key.push(name);
         }
         return resolve(values, key, param.getParameterizedType(), request, response);
-    }
-
-    private FileContainer manageFile(Part filepart) {
-        FileContainer fileContainer = new FileContainer();
-
-        fileContainer.setFilename(filepart.getSubmittedFileName());
-        fileContainer.setMimeType(filepart.getContentType());
-
-        try (InputStream data = filepart.getInputStream()) {
-            fileContainer.setData(data.readAllBytes());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return fileContainer;
-    }
-
-    private Class<?> rawClass(Type t) {
-        if (t instanceof ParameterizedType pt)
-            return (Class<?>) pt.getRawType();
-        return (Class<?>) t;
-    }
-
-    private Type listElementType(Type t) {
-        if (t instanceof ParameterizedType pt)
-            return pt.getActualTypeArguments()[0];
-        return String.class;
     }
 
     private Object resolve(Map<String, String[]> values, Stack<String> key, Type goal,
@@ -147,7 +116,7 @@ public class ParameterResolver {
                         CollectionProcessing cp = new CollectionProcessing();
                         for (Part part : request.getParts()) {
                             if (part.getName().equals(cp.buildKey(key)) && part.getSize() > 0) {
-                                items.add(manageFile(part));
+                                items.add(FileParts.toContainer(part));
                             }
                         }
                         return items;
@@ -186,7 +155,7 @@ public class ParameterResolver {
                     return newCollection(raw);
                 return null;
             }
-            return parseParameter(vals, goal);
+            return ValueParser.parseParameter(vals, goal);
         }
 
         if (!key.isEmpty() && !collections.hasKeysUnder(values.keySet(), collections.buildKey(key))) {
@@ -196,27 +165,13 @@ public class ParameterResolver {
         return resolveObject(values, raw, key, request, response);
     }
 
-    private Collection<Object> newCollection(Class<?> raw) {
-        if (raw.isAssignableFrom(ArrayList.class))
-            return new ArrayList<>();
-        if (raw.isAssignableFrom(LinkedHashSet.class))
-            return new LinkedHashSet<>();
-        if (raw.isAssignableFrom(TreeSet.class))
-            return new TreeSet<>();
-        if (raw.isAssignableFrom(LinkedList.class))
-            return new LinkedList<>();
-        throw new IllegalArgumentException("We don't support your collection type , change yours : " + raw.getName());
-    }
-
     private Object resolveObject(Map<String, String[]> responses, Class<?> toReturn, Stack<String> key,
             HttpServletRequest request,
             HttpServletResponse response) {
         try {
             Object toReturnInstance = toReturn.getDeclaredConstructor().newInstance();
             for (Class<?> c = toReturn; c != null && c != Object.class; c = c.getSuperclass()) {
-
                 for (Field field : c.getDeclaredFields()) {
-
                     if (Modifier.isStatic(field.getModifiers()))
                         continue;
                     Class<?> fieldType = field.getType();
@@ -259,144 +214,6 @@ public class ParameterResolver {
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
-        }
-    }
-
-    private Object parseParameter(String[] values, Type targetType) {
-        if (targetType instanceof ParameterizedType paramType
-                && Collection.class.isAssignableFrom((Class<?>) paramType.getRawType())) {
-
-            Type rawGenericType = paramType.getActualTypeArguments()[0];
-            Class<?> genericClass = (rawGenericType instanceof Class<?>)
-                    ? (Class<?>) rawGenericType
-                    : String.class;
-
-            String[] effectiveValues = (values.length == 1 && values[0].contains(","))
-                    ? values[0].split("\\s*,\\s*")
-                    : values;
-
-            Collection<Object> collection = newCollection((Class<?>) paramType.getRawType());
-            for (String val : effectiveValues) {
-                collection.add(parseParameter(val, genericClass));
-            }
-            return collection;
-        } else if (targetType instanceof Class<?> rawClass && Collection.class.isAssignableFrom(rawClass)) {
-            String[] effectiveValues = (values.length == 1 && values[0].contains(","))
-                    ? values[0].split("\\s*,\\s*")
-                    : values;
-
-            Collection<Object> collection = newCollection(rawClass);
-            for (String val : effectiveValues) {
-                collection.add(parseParameter(val, String.class));
-            }
-            return collection;
-        }
-
-        if (targetType instanceof Class<?> goal && goal.isArray()) {
-            Class<?> componentType = goal.componentType();
-            String[] effectiveValues = (values.length == 1 && values[0].contains(","))
-                    ? values[0].split("\\s*,\\s*")
-                    : values;
-
-            Object toReturn = Array.newInstance(componentType, effectiveValues.length);
-            for (int i = 0; i < effectiveValues.length; i++) {
-                Array.set(toReturn, i, parseParameter(effectiveValues[i], componentType));
-            }
-            return toReturn;
-        }
-
-        if (targetType instanceof Class<?> goalClass) {
-            return parseParameter(values[0], goalClass);
-        }
-
-        throw new IllegalArgumentException("Unsupported type: " + targetType);
-    }
-
-    private Object getDefaultValue(Class<?> type) {
-        if (type == boolean.class)
-            return false;
-        if (type == int.class)
-            return 0;
-        if (type == long.class)
-            return 0L;
-        if (type == double.class)
-            return 0.0d;
-        if (type == float.class)
-            return 0.0f;
-        if (type == char.class)
-            return '\0';
-        if (type == short.class)
-            return (short) 0;
-        if (type == byte.class)
-            return (byte) 0;
-        return null;
-    }
-
-    private boolean isScalarOrArray(Class<?> type) {
-        if (Collection.class.isAssignableFrom(type)) {
-            return true;
-        }
-        Class<?> componentType = type.isArray() ? type.componentType() : type;
-
-        return componentType.isPrimitive()
-                || componentType == String.class
-                || componentType == Integer.class
-                || componentType == Double.class
-                || componentType == Float.class
-                || componentType == Long.class
-                || componentType == Short.class
-                || componentType == Byte.class
-                || componentType == Boolean.class
-                || componentType == Character.class
-                || componentType == BigDecimal.class
-                || componentType == BigInteger.class
-                || componentType == LocalDate.class
-                || componentType == LocalDateTime.class
-                || componentType == LocalTime.class
-                || componentType == Date.class;
-    }
-
-    private Object parseParameter(String value, Class<?> goal) {
-        String trimmed = value.trim();
-
-        if (goal == String.class) {
-            return value;
-        } else if (goal == LocalDate.class) {
-            return LocalDate.parse(trimmed);
-        } else if (goal == LocalDateTime.class) {
-            if (trimmed.length() == 16) {
-                trimmed = trimmed + ":00";
-            }
-            return LocalDateTime.parse(trimmed);
-        } else if (goal == Date.class) {
-            try {
-                return new java.text.SimpleDateFormat("yyyy-MM-dd").parse(trimmed);
-            } catch (java.text.ParseException e) {
-                throw new IllegalArgumentException("Date format invalid (attendu yyyy-MM-dd) : " + trimmed, e);
-            }
-        } else if (goal == Integer.class || int.class == goal) {
-            return Integer.valueOf(trimmed);
-        } else if (goal == Double.class || double.class == goal) {
-            return Double.valueOf(trimmed);
-        } else if (goal == Float.class || float.class == goal) {
-            return Float.valueOf(trimmed);
-        } else if (goal == Long.class || long.class == goal) {
-            return Long.valueOf(trimmed);
-        } else if (goal == Short.class || short.class == goal) {
-            return Short.valueOf(trimmed);
-        } else if (goal == Byte.class || byte.class == goal) {
-            return Byte.valueOf(trimmed);
-        } else if (goal == BigDecimal.class) {
-            return new BigDecimal(trimmed);
-        } else if (goal == Boolean.class || boolean.class == goal) {
-            return "true".equalsIgnoreCase(trimmed) || "on".equalsIgnoreCase(trimmed) || "1".equals(trimmed);
-        } else if (goal == char.class || goal == Character.class) {
-            if (trimmed.length() != 1) {
-                throw new IllegalArgumentException("Impossible to convert : '" + value + "' into a char");
-            }
-            return trimmed.charAt(0);
-        } else {
-            throw new IllegalArgumentException("Unsupported type : " + goal.getName());
         }
     }
 }

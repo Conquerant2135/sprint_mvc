@@ -1,4 +1,4 @@
-package mg.conquerant.sprintmvc.core.mapping;
+package mg.conquerant.sprintmvc.core.web;
 
 import java.util.Map;
 import java.util.HashMap;
