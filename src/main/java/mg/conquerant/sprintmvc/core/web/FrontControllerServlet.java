@@ -28,7 +28,7 @@ public class FrontControllerServlet extends HttpServlet {
     private transient JsonConverter converter;
     private transient String sessionVerification;
     private transient String profileKey;
-    private transient final String sessionAttribute = Config.getProperty("sprintmvc.session");
+    private final transient String sessionAttribute = Config.getProperty("sprintmvc.session");
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -104,9 +104,9 @@ public class FrontControllerServlet extends HttpServlet {
                         System.out.println("ClassLoader du Servlet : " + this.getClass().getClassLoader());
                     }
                     if (session.getAttribute(sessionAttribute) == null
-                            || request.getSession().getAttribute(sessionVerification) == null) {
-                        // System.out.println(request.getSession().getAttribute(sessionVerification));
-                        // System.out.println(request.getSession().getAttribute(sessionAttribute));
+                            || source == null) {
+                        // System.out.println(source);
+                        // System.out.println(source);
                         // System.out.println(session.getId());
                         response.setContentType("application/json");
                         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -125,7 +125,6 @@ public class FrontControllerServlet extends HttpServlet {
                 if (toTest.isRestricted()) {
                     User toView = (User) request.getSession().getAttribute(profileKey);
                     if (toView == null || !toTest.isPermitted(toView.getRole())) {
-                        System.out.println(toView.getRole());
                         response.setContentType("application/json");
                         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                         response.setCharacterEncoding("UTF-8");
