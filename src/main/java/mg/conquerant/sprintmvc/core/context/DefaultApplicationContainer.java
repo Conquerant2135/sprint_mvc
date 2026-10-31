@@ -21,7 +21,7 @@ public class DefaultApplicationContainer implements ApplicationContainer {
             bean = beans.get(toGet);
             if( bean == null){
                 bean = createInstance(toGet);
-                addBean(toGet , bean);
+                beans.put(toGet , bean);
             }
             return bean;
         }
@@ -62,9 +62,5 @@ public class DefaultApplicationContainer implements ApplicationContainer {
             }
         }
         return biggestConstructor;
-    }
-
-    public void addBean(Class<?> toPutKey, Object toPut) {
-        beans.put(toPutKey, toPut);
     }
 }
