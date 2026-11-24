@@ -12,6 +12,9 @@ public class SpringApplicationContainer implements ApplicationContainer {
 
     @Override
     public Object getBean(Class<?> clazz) {
-        return context.getBean(clazz);
+        if (context.getBeanNamesForType(clazz).length != 0) {
+            return context.getBean(clazz);
+        }
+        return context.getAutowireCapableBeanFactory().createBean(clazz);
     }
 }
